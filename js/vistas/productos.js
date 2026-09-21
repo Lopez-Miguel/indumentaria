@@ -1,0 +1,170 @@
+import { $, esc, plata, plataCorta, aCentavos, nid, avisar, dialogo, cerrarDialogo }
+  from '../utilidades.js';
+import { datos, guardar } from '../almacen.js';
+import { buscar, activos, stockDe, valorStockVenta, precioDe } from '../negocio.js';
+import { talle, vacio, buscador } from '../componentes.js';
+import { ui, bus } from '../estado.js';
+
+export function vistaProductos(){
+  $('#subtitulo').textContent =
+    `${activos().length} productos · ${activos().reduce((a, p) => a + stockDe(p), 0)} prendas en stock`;
+  $('#acciones').innerHTML = `
+    ${buscador(ui.busqueda)}
+    <button class="btn" data-ir="importar">Importar</button>
+    <button class="btn primario" id="nuevo-producto">Nuevo producto</button>`;
+
+  const lista = buscar(ui.busqueda);
+
+  $('#hoja').innerHTML = lista.length
+    ? `<section class="tarjeta"><div class="tabla-env"><table>
+        <thead><tr>
+          <th>Producto</th><th>Stock por talle</th>
+          <th class="der">Costo</th><th class="der">Margen</th>
+          <th class="der">Precio</th><th class="der">Valor</th><th></th>
+        </tr></thead>
+        <tbody>${lista.map(p => `
+          <tr>
+            <td><div class="prod-nombre">${esc(p.nombre)}</div>
+                <div class="prod-cat">${esc(p.categoria || 'Sin categoría')}</div></td>
+            <td><div class="talles">${
+              Object.entries(p.talles || {}).map(([t, c]) => talle(t, c)).join('') || '—'}</div></td>
+            <td class="der num">${plata(p.costoC)}</td>
+            <td class="der num">${p.margen}%</td>
+            <td class="der num" style="font-weight:600">${plata(p.precioC)}</td>
+            <td class="der num" style="color:var(--tinta-2)">${plataCorta(valorStockVenta(p))}</td>
+            <td class="der"><button class="btn chico plano" data-editar="${p.id}">Editar</button></td>
+          </tr>`).join('')}</tbody>
+      </table></div></section>`
+    : `<section class="tarjeta">${vacio({
+        titulo: ui.busqueda ? 'Sin resultados' : 'Todavía no cargaste productos',
+        texto: ui.busqueda
+          ? 'Probá con otro nombre o categoría.'
+          : 'Pegá el stock desde tu planilla de Excel y en un minuto tenés todo adentro.',
+        accion: ui.busqueda ? ''
+          : '<button class="btn primario" data-ir="importar">Importar desde Excel</button>'
+      })}</section>`;
+
+  const q = $('#q');
+  if (q) q.oninput = e => {
+    ui.busqueda = e.target.value;
+    const pos = e.target.selectionStart;
+    vistaProductos();
+    const n = $('#q');
+    if (n){ n.focus(); n.setSelectionRange(pos, pos); }
+  };
+}
+
+/* --------------------------------------------------------------------------
+   EDITOR
+   -------------------------------------------------------------------------- */
+export function editorProducto(id){
+  const p = id ? datos.productos.find(x => x.id === id) : null;
+  const talles = p ? { ...p.talles } : { S: 0, M: 0, L: 0, XL: 0 };
+  const categorias = [...new Set(datos.productos.map(x => x.categoria).filter(Boolean))];
+
+  dialogo({
+    titulo: p ? 'Editar producto' : 'Nuevo producto',
+    cuerpo: `
+      <div style="display:grid;gap:14px">
+        <label class="campo"><span>Nombre</span>
+          <input type="text" id="e-nombre" value="${esc(p ? p.nombre : '')}"
+                 placeholder="Remera oversize"></label>
+        <label class="campo"><span>Categoría</span>
+          <input type="text" id="e-cat" value="${esc(p ? p.categoria : '')}"
+                 placeholder="Remeras" list="cats">
+          <datalist id="cats">${categorias.map(c => `<option value="${esc(c)}">`).join('')}</datalist>
+        </label>
+        <div class="rejilla">
+          <label class="campo"><span>Costo por unidad</span>
+            <input type="text" id="e-costo" inputmode="decimal"
+              value="${p ? (p.costoC / 100).toString().replace('.', ',') : ''}" placeholder="8200"></label>
+          <label class="campo"><span>Margen de venta</span>
+            <input type="number" id="e-margen" value="${p ? p.margen : 120}" min="0" step="5"></label>
+        </div>
+        <div style="background:var(--marca-suave);border-radius:var(--r-ch);padding:11px 14px;
+                    display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:13.5px;color:var(--marca-oscuro)">Precio de venta</span>
+          <b class="num" id="e-precio" style="font-size:19px;color:var(--marca-oscuro)">—</b>
+        </div>
+        <div>
+          <span style="display:block;font-size:13px;color:var(--tinta-2);margin-bottom:7px;font-weight:500">
+            Stock por talle</span>
+          <div id="e-talles" style="display:grid;gap:8px"></div>
+          <div style="display:flex;gap:8px;margin-top:9px">
+            <input type="text" id="e-talle-nuevo" placeholder="Agregar talle (XXL, 46…)" style="flex:1">
+            <button class="btn chico" id="e-talle-mas">Agregar</button>
+          </div>
+        </div>
+      </div>`,
+    pie: `${p ? '<button class="btn riesgo" id="e-borrar" style="margin-right:auto">Eliminar</button>' : ''}
+          <button class="btn" data-cerrar>Cancelar</button>
+          <button class="btn primario" id="e-guardar">Guardar</button>`,
+    alAbrir(){
+      const pintarTalles = () => {
+        $('#e-talles').innerHTML = Object.entries(talles).map(([t, c]) => `
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="flex:none;width:52px;font-weight:600;font-size:14px">${esc(t)}</span>
+            <input type="number" data-talle="${esc(t)}" value="${c}" min="0" style="flex:1">
+            <button class="btn chico plano" data-quitar-talle="${esc(t)}"
+              style="color:var(--tinta-3)">Quitar</button>
+          </div>`).join('')
+          || '<p style="color:var(--tinta-3);font-size:13.5px;margin:0">Sin talles cargados.</p>';
+      };
+      pintarTalles();
+
+      const recalcular = () => {
+        const c = aCentavos($('#e-costo').value);
+        const m = parseFloat($('#e-margen').value) || 0;
+        $('#e-precio').textContent = plata(Math.round(c * (1 + m / 100)));
+      };
+      recalcular();
+      $('#e-costo').oninput = recalcular;
+      $('#e-margen').oninput = recalcular;
+
+      $('#e-talle-mas').onclick = () => {
+        const t = $('#e-talle-nuevo').value.trim().toUpperCase();
+        if (!t) return;
+        if (talles[t] !== undefined){ avisar('Ese talle ya está', true); return; }
+        talles[t] = 0; $('#e-talle-nuevo').value = ''; pintarTalles();
+      };
+      $('#dlg-cuerpo').addEventListener('click', ev => {
+        const q = ev.target.closest('[data-quitar-talle]');
+        if (q){ delete talles[q.dataset.quitarTalle]; pintarTalles(); }
+      });
+      $('#dlg-cuerpo').addEventListener('input', ev => {
+        const t = ev.target.dataset.talle;
+        if (t !== undefined) talles[t] = Math.max(0, parseInt(ev.target.value) || 0);
+      });
+
+      $('#e-guardar').onclick = () => {
+        const nombre = $('#e-nombre').value.trim();
+        if (!nombre){ avisar('Poné un nombre al producto', true); return; }
+        const costoC = aCentavos($('#e-costo').value);
+        const margen = parseFloat($('#e-margen').value) || 0;
+        const limpios = {};
+        Object.entries(talles).forEach(([t, c]) => limpios[t] = Math.max(0, parseInt(c) || 0));
+
+        if (p){
+          Object.assign(p, { nombre, categoria: $('#e-cat').value.trim(), costoC, margen, talles: limpios });
+          p.precioC = precioDe(p);
+        } else {
+          const np = { id: nid(), nombre, categoria: $('#e-cat').value.trim(),
+                       costoC, margen, talles: limpios, activo: true };
+          np.precioC = precioDe(np);
+          datos.productos.push(np);
+        }
+        guardar(); cerrarDialogo(); bus.pintar();
+        avisar(p ? 'Producto actualizado' : 'Producto agregado');
+      };
+
+      const borrar = $('#e-borrar');
+      if (borrar) borrar.onclick = () => {
+        /* No se borra de verdad: se marca inactivo para no romper el historial
+           de ventas, que guarda el id del producto. */
+        p.activo = false;
+        guardar(); cerrarDialogo(); bus.pintar();
+        avisar('Producto eliminado');
+      };
+    }
+  });
+}

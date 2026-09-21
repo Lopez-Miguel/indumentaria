@@ -1,0 +1,171 @@
+# Control de stock y caja — indumentaria
+
+Sistema de control interno para un local de ropa: stock por talle, registro de
+ventas, ingresos, egresos y balance. Vanilla JavaScript, sin dependencias, sin
+compilación.
+
+No es un sistema de venta online ni de facturación. No emite comprobantes
+fiscales.
+
+---
+
+## Arrancar
+
+```bash
+node servidor/servidor.mjs
+```
+
+Y abrir `http://localhost:4173`.
+
+Usuario `mica`, contraseña `1190`.
+
+Para que lo use la tablet contra una notebook en el local, hay que entrar por la
+IP de la notebook en la misma red, por ejemplo `http://192.168.0.10:4173`.
+
+> **No abras `index.html` con doble clic.** El navegador bloquea los módulos
+> JavaScript y la lectura de archivos en `file://`, así que la página queda en
+> blanco. Hace falta servirla, aunque sea con `npx serve`.
+
+---
+
+## Los dos modos de guardado
+
+Esto es lo primero que conviene entender, porque cambia dónde terminan los datos.
+
+Una web estática no puede escribir en un archivo del servidor: el navegador
+puede leer `datos/inicial.json` con `fetch`, pero no tiene ninguna forma de
+sobrescribirlo. Por eso hay dos modos, y la aplicación elige solo cuál usar al
+arrancar.
+
+| | **Modo servidor** | **Modo navegador** |
+|---|---|---|
+| Cuándo | Corriendo `servidor/servidor.mjs` | GitHub Pages, o cualquier hosting estático |
+| Guarda en | `datos/base.json` | Almacenamiento del navegador |
+| Se comparte entre dispositivos | Sí, contra el mismo servidor | No, cada equipo tiene lo suyo |
+| Respaldo | El archivo mismo | Botón "Descargar respaldo" en Ajustes |
+
+En Ajustes hay una tarjeta que dice en cuál de los dos está funcionando en ese
+momento, para no adivinar.
+
+En modo navegador, para conservar los cambios hay que descargar el respaldo
+desde Ajustes y reemplazar `datos/inicial.json` en el repositorio.
+
+---
+
+## Estructura
+
+```
+index.html              La página. Solo el armazón; el contenido lo dibuja el JS.
+css/estilos.css         Todos los estilos. La paleta está en :root, arriba de todo.
+
+js/
+  config.js             Rutas y claves de almacenamiento.
+  utilidades.js         DOM, formato de plata y fechas, avisos, diálogos.
+  almacen.js            Acceso a datos. Lo único que se reescribe al pasar a Firestore.
+  negocio.js            Cálculos: precios, stock, rangos, resúmenes. Sin DOM.
+  auth.js               Ingreso de prototipo.
+  estado.js             Lo que la interfaz recuerda mientras se usa.
+  componentes.js        Trozos de HTML compartidos entre vistas.
+  vistas/               Una por pantalla: panel, productos, vender, importar,
+                        caja, informes, ajustes.
+  app.js                Router, eventos y arranque.
+
+datos/
+  usuarios.json         Usuario y hash de la contraseña.
+  inicial.json          Base de arranque, versionada en el repositorio.
+  base.json             Base de trabajo. NO se versiona (está en .gitignore).
+
+servidor/servidor.mjs   Servidor local que persiste la base. Sin dependencias.
+
+herramientas/
+  semilla.mjs           Regenera datos/inicial.json con datos de muestra.
+  clave.mjs             Calcula el hash de una contraseña nueva.
+  construir.mjs         Arma dist/demo.html, todo en un solo archivo.
+```
+
+---
+
+## Sobre el ingreso: no es seguridad
+
+`datos/usuarios.json` es un archivo público del sitio. Cualquiera que ponga la
+URL lo descarga. La contraseña está guardada como hash SHA-256, así que no se lee
+de un vistazo, pero **la comparación ocurre en el navegador de quien entra**: con
+la consola abierta se saltea en diez segundos.
+
+Sirve para que no entre cualquiera que agarre la tablet, y nada más. Los datos
+del negocio tampoco están protegidos: en modo servidor, cualquiera en la misma
+red que llegue a `/api/base` los lee y los escribe.
+
+Para producción, esto se reemplaza por Firebase Authentication más Firestore con
+Security Rules, donde la validación pasa a estar del lado del servidor.
+
+Para cambiar la contraseña:
+
+```bash
+node herramientas/clave.mjs nuevaclave
+```
+
+y pegar el hash en `datos/usuarios.json`.
+
+---
+
+## Decisiones que conviene conocer antes de tocar el código
+
+**La plata se guarda en centavos enteros.** Nunca en decimales. `0.1 + 0.2` no
+da `0.3` en JavaScript, y ese error repetido mil veces descuadra la caja. Todos
+los campos terminados en `C` (`costoC`, `precioC`, `montoC`) son enteros.
+
+**`aCentavos()` contempla el formato argentino.** `19.500` son diecinueve mil
+quinientos; `19,50` son diecinueve con cincuenta. La función mira cuántos dígitos
+hay después del separador para decidir. Si se toca, hay que probar los dos casos.
+
+**El precio y el costo quedan congelados dentro de cada venta.** No se guarda una
+referencia al producto, se copian los valores. Si mañana cambia el margen de una
+remera, la ganancia de las ventas de ayer no se reescribe.
+
+**Los productos eliminados se marcan `activo: false`, no se borran.** El historial
+de ventas guarda el id del producto: borrarlo de verdad rompería los informes
+viejos.
+
+**Al importar, el stock se suma al existente.** Importar dos veces la misma
+remesa la acumula, no la pisa. Lo que sí se reemplaza es el costo y el margen.
+
+**Las vistas se redibujan enteras.** Por eso los eventos están todos en un único
+oyente en `app.js`, delegado por atributos `data-`: enganchar oyentes a cada
+botón se perdería en el siguiente repintado.
+
+---
+
+## Formato de importación
+
+La primera fila define las columnas. `nombre` y `costo` son obligatorias;
+`categoria` y `margen`, opcionales. **Cualquier otra columna se toma como un
+talle**, así que el mismo importador sirve con S/M/L/XL o con 38/40/42.
+
+```
+nombre	categoria	costo	margen	S	M	L	XL
+Remera lisa	Remeras	8200	120	6	9	7	3
+```
+
+Acepta tabulaciones (lo que copia Excel) y punto y coma.
+
+---
+
+## Publicar en GitHub Pages
+
+Subir el repositorio y activar Pages sobre la rama principal, carpeta raíz. No
+hay build. Va a funcionar en modo navegador, con la base de `datos/inicial.json`
+como punto de partida.
+
+Tener presente que en un repositorio público queda expuesto todo, incluido
+`datos/usuarios.json` y cualquier dato real que se haya dejado en
+`datos/inicial.json`.
+
+---
+
+## Qué falta para producción
+
+1. Firebase Authentication en lugar de `auth.js`.
+2. Firestore en lugar de `almacen.js`, con Security Rules que exijan `auth != null`.
+3. Cierre de caja diario.
+4. Definir si hace falta código de barras.
