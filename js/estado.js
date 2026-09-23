@@ -13,11 +13,10 @@ export const ui = {
   vista: 'panel',
   busqueda: '',
 
-  /* Caja e informes comparten la forma del rango: una clave de preajuste
-     ('hoy', '7', 'mes', '30', 'todo') o 'personalizado', y en ese caso
-     mandan `desde` y `hasta`. */
-  rangoCaja:    { clave: 'mes', desde: primeroDelMes(), hasta: hoyTexto() },
-  rangoInforme: { clave: 'mes', desde: primeroDelMes(), hasta: hoyTexto() },
+  /* Caja e informes usan siempre un rango libre desde-hasta. Arranca en lo
+     que va del mes: del día 1 hasta hoy. */
+  rangoCaja:    { clave: 'personalizado', desde: primeroDelMes(), hasta: hoyTexto() },
+  rangoInforme: { clave: 'personalizado', desde: primeroDelMes(), hasta: hoyTexto() },
 
   carrito: [],
   medioPago: MEDIO_POR_DEFECTO,

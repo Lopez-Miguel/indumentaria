@@ -158,6 +158,12 @@ solo en el CSS. Un SVG sin medidas se dibuja a su tamaño por defecto, que son
 300×150: si la hoja de estilos no llega a aplicarse —caché vieja, un motor que
 no soporta la regla— aparece un dibujo gigante y relleno de negro en cada fila.
 
+**Caja e informes usan siempre un rango libre desde-hasta**, sin preajustes,
+y arrancan en lo que va del mes: del día 1 hasta hoy. Los campos no llevan
+`min` ni `max`: poner `max` en "desde" impediría correr toda la ventana hacia
+atrás, porque obligaría a tocar "hasta" primero. Si quedan al revés, `rango()`
+los da vuelta solo y lo dice en el subtítulo.
+
 **Las fechas del rango desde-hasta se arman a mano.** `new Date('2026-09-22')`
 las interpreta como UTC y en Argentina se corren un día para atrás; por eso
 `desdeTexto()` en `negocio.js` parte el texto y usa hora local.

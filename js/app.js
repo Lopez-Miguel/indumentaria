@@ -90,12 +90,6 @@ document.addEventListener('click', ev => {
   const ver = t.closest('[data-ver]');
   if (ver){ alternarDetalle(ver.dataset.ver); return; }
 
-  /* rangos */
-  const rc = t.closest('[data-rango-caja]');
-  if (rc){ ui.rangoCaja.clave = rc.dataset.rangoCaja; vistaCaja(); return; }
-  const ri = t.closest('[data-rango-informe]');
-  if (ri){ ui.rangoInforme.clave = ri.dataset.rangoInforme; vistaInformes(); return; }
-
   /* sesión */
   if (t.id === 'salir'){ salir(); return; }
 });

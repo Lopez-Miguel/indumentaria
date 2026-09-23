@@ -1,7 +1,7 @@
 /* Trozos de HTML que usan varias vistas. Devuelven texto, no tocan el DOM. */
 
 import { esc, plata, plataCorta, fechaCorta } from './utilidades.js';
-import { RANGOS, porDia, diasDe } from './negocio.js';
+import { porDia, diasDe } from './negocio.js';
 import { datos } from './almacen.js';
 
 export function cifra({ titulo, valor, pie, tono = '', acento = false }){
@@ -12,23 +12,18 @@ export function cifra({ titulo, valor, pie, tono = '', acento = false }){
   </div>`;
 }
 
-/* Preajustes + rango libre desde-hasta. `r` es el objeto del estado:
-   { clave, desde, hasta }. `attr` es el data- que escucha app.js. */
+/* Rango de fechas desde-hasta. `r` es el objeto del estado
+   { clave, desde, hasta }; `attr` es el data- que escucha app.js.
+   Sin min ni max en los campos: si los carga al revés, rango() los da vuelta
+   solo. Poner max en "desde" impediría correr toda la ventana hacia atrás,
+   porque habría que tocar "hasta" primero. */
 export function selectorRango(r, attr){
-  const libre = r.clave === 'personalizado';
   return `
     <div class="rango">
-      <div class="rango-botones">
-        ${RANGOS.map(([k, t]) => `<button class="btn chico ${r.clave === k ? 'primario' : 'plano'}"
-          ${attr}="${k}" style="border:0">${t}</button>`).join('')}
-      </div>
-      ${libre ? `
-        <div class="rango-fechas">
-          <label><span>Desde</span>
-            <input type="date" ${attr}-desde value="${esc(r.desde || '')}" max="${esc(r.hasta || '')}"></label>
-          <label><span>Hasta</span>
-            <input type="date" ${attr}-hasta value="${esc(r.hasta || '')}" min="${esc(r.desde || '')}"></label>
-        </div>` : ''}
+      <label><span>Desde</span>
+        <input type="date" ${attr}-desde value="${esc(r.desde || '')}"></label>
+      <label><span>Hasta</span>
+        <input type="date" ${attr}-hasta value="${esc(r.hasta || '')}"></label>
     </div>`;
 }
 
@@ -75,7 +70,7 @@ export const buscador = valor => `
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="1.9" stroke-linecap="round">
       <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input type="search" id="q" placeholder="Buscar prenda" value="${esc(valor)}">
+    <input type="search" id="q" placeholder="Buscar producto" value="${esc(valor)}">
   </label>`;
 
 /* Etiqueta chica para la forma de cobro y para quién operó. */

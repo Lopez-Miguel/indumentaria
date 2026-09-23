@@ -20,7 +20,7 @@ export function vistaPanel(){
   $('#hoja').innerHTML = `
     <dl class="cifras">
       ${cifra({ titulo:'Vendido este mes', valor: plataCorta(mes.vendido), acento: true,
-                pie: `${mes.ventas.length} ventas · ${mes.unidades} prendas` })}
+                pie: `${mes.ventas.length} ventas · ${mes.unidades} productos` })}
       ${cifra({ titulo:'Ganancia del mes', valor: plataCorta(mes.ganancia), tono:'pos',
                 pie: `${mes.vendido ? Math.round(mes.ganancia / mes.vendido * 100) : 0}% sobre lo vendido` })}
       ${cifra({ titulo:'Egresos del mes', valor: plataCorta(mes.egresos), tono:'neg',
@@ -59,7 +59,7 @@ export function vistaPanel(){
 
     <dl class="cifras" style="margin-top:16px">
       ${cifra({ titulo:'Hoy', valor: plataCorta(hoy.vendido), pie:`${hoy.ventas.length} ventas` })}
-      ${cifra({ titulo:'Prendas en stock', valor: unidades,
+      ${cifra({ titulo:'Unidades en stock', valor: unidades,
                 pie:`${inv.length} productos distintos` })}
       ${cifra({ titulo:'Invertido en mercadería', valor: plataCorta(costoInv), pie:'a precio de costo' })}
       ${cifra({ titulo:'Si vendés todo', valor: plataCorta(ventaInv),

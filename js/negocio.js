@@ -29,17 +29,10 @@ export function buscar(texto){
 /* --------------------------------------------------------------------------
    RANGOS DE FECHA
    -------------------------------------------------------------------------- */
-export const RANGOS = [
-  ['hoy',  'Hoy'],
-  ['7',    '7 días'],
-  ['mes',  'Este mes'],
-  ['30',   '30 días'],
-  ['todo', 'Todo'],
-  ['personalizado', 'Desde-hasta']
-];
-
 /* Acepta el objeto que guarda la interfaz: { clave, desde, hasta }.
-   Con 'personalizado' mandan desde y hasta; con el resto se calcula solo.
+   Caja e informes usan siempre 'personalizado', con desde y hasta a la vista.
+   Las claves fijas ('hoy', 'mes'…) las sigue usando el panel, que muestra
+   siempre el mes en curso sin darle opción a elegir.
    Las fechas llegan como 'AAAA-MM-DD' de un <input type="date">, así que se
    les pega la hora local a mano: hacerlo con new Date('2026-09-22') las
    interpretaría como UTC y en Argentina se correrían un día para atrás. */

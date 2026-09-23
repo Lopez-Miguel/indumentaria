@@ -36,9 +36,9 @@ export function vistaCaja(){
   const r = rango(ui.rangoCaja);
   const s = resumen(r);
 
-  $('#subtitulo').textContent = ui.rangoCaja.clave === 'todo'
-    ? 'Todo el historial'
-    : `Del ${fechaLarga.format(r.ini)} al ${fechaLarga.format(r.fin)}`;
+  $('#subtitulo').textContent =
+    `Del ${fechaLarga.format(r.ini)} al ${fechaLarga.format(r.fin)}` +
+    (r.dadoVuelta ? ' · las fechas estaban al revés, las di vuelta' : '');
 
   $('#acciones').innerHTML = `
     ${selectorRango(ui.rangoCaja, 'data-rango-caja')}
@@ -93,12 +93,12 @@ export function vistaCaja(){
 }
 
 function tituloVenta(v){
-  const prendas = v.items.reduce((a, i) => a + i.cant, 0);
+  const unidades = v.items.reduce((a, i) => a + i.cant, 0);
   if (v.items.length === 1){
     const i = v.items[0];
     return `${i.cant}× ${i.nombre} · talle ${i.talle}`;
   }
-  return `Venta de ${prendas} prendas`;
+  return `Venta de ${unidades} productos`;
 }
 
 function bloqueDia(g){

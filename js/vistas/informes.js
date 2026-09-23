@@ -14,10 +14,9 @@ export function vistaInformes(){
   const usuarios = porUsuario(s.ventas);
   const topMedio = medios.length ? medios[0].totalC : 1;
 
-  $('#subtitulo').textContent = ui.rangoInforme.clave === 'todo'
-    ? 'Todo el historial'
-    : `Del ${fechaLarga.format(r.ini)} al ${fechaLarga.format(r.fin)}` +
-      (r.dadoVuelta ? ' (fechas invertidas, las di vuelta)' : '');
+  $('#subtitulo').textContent =
+    `Del ${fechaLarga.format(r.ini)} al ${fechaLarga.format(r.fin)}` +
+    (r.dadoVuelta ? ' · las fechas estaban al revés, las di vuelta' : '');
 
   $('#acciones').innerHTML = `
     ${selectorRango(ui.rangoInforme, 'data-rango-informe')}
@@ -29,7 +28,7 @@ export function vistaInformes(){
                 pie:`${s.ventas.length} ventas` })}
       ${cifra({ titulo:'Ganancia', valor: plataCorta(s.ganancia), tono:'pos',
                 pie:`${s.vendido ? Math.round(s.ganancia / s.vendido * 100) : 0}% de margen real` })}
-      ${cifra({ titulo:'Prendas vendidas', valor: s.unidades,
+      ${cifra({ titulo:'Productos vendidos', valor: s.unidades,
                 pie:`${s.ventas.length ? (s.unidades / s.ventas.length).toFixed(1) : 0} por venta` })}
       ${cifra({ titulo:'Venta promedio', valor: plataCorta(s.ticket), pie:'por operación' })}
     </dl>
@@ -117,10 +116,7 @@ function descargarCSV(s, r){
       ((i.precioC - i.costoC) * i.cant / 100).toFixed(2)
     ])));
 
-  const nombre = ui.rangoInforme.clave === 'personalizado'
-    ? `ventas-${dia(r.ini.toISOString())}-a-${dia(r.fin.toISOString())}.csv`
-    : `ventas-${ui.rangoInforme.clave}.csv`;
-
-  bajar(nombre, aCSV(filas), 'text/csv;charset=utf-8');
+  bajar(`ventas-${ui.rangoInforme.desde}-a-${ui.rangoInforme.hasta}.csv`,
+        aCSV(filas), 'text/csv;charset=utf-8');
   avisar('CSV descargado');
 }

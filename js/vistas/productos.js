@@ -7,7 +7,7 @@ import { ui, bus, quienOpera } from '../estado.js';
 
 export function vistaProductos(){
   $('#subtitulo').textContent =
-    `${activos().length} productos · ${activos().reduce((a, p) => a + stockDe(p), 0)} prendas en stock`;
+    `${activos().length} productos · ${activos().reduce((a, p) => a + stockDe(p), 0)} unidades en stock`;
   $('#acciones').innerHTML = `
     ${buscador(ui.busqueda)}
     <button class="btn" data-ir="importar">Importar</button>

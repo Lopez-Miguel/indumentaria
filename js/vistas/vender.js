@@ -11,7 +11,7 @@ export function vistaVender(){
   const lista = buscar(ui.busqueda);
   const total   = ui.carrito.reduce((a, i) => a + i.precioC * i.cant, 0);
   const costo   = ui.carrito.reduce((a, i) => a + i.costoC * i.cant, 0);
-  const prendas = ui.carrito.reduce((a, i) => a + i.cant, 0);
+  const unidades = ui.carrito.reduce((a, i) => a + i.cant, 0);
 
   $('#hoja').innerHTML = `<div class="venta">
     <div>${lista.length ? `<div class="catalogo">${lista.map(p => `
@@ -25,7 +25,7 @@ export function vistaVender(){
             <b>${esc(t)}</b><small>${c}</small></button>`).join('')}</div>
       </div>`).join('')}</div>`
       : `<section class="tarjeta">${vacio({
-          titulo:'No hay prendas para vender',
+          titulo:'No hay productos para vender',
           texto:'Cargá productos o revisá la búsqueda.' })}</section>`}
     </div>
 
@@ -53,7 +53,7 @@ export function vistaVender(){
             </select>
           </label>
 
-          <div class="total-fila"><span>Prendas</span><span class="num">${prendas}</span></div>
+          <div class="total-fila"><span>Productos</span><span class="num">${unidades}</span></div>
           <div class="total-fila"><span>Ganancia de esta venta</span>
             <span class="num pos">${plata(total - costo)}</span></div>
           <div class="total-fila grande"><span>Total</span><b class="num">${plata(total)}</b></div>
@@ -61,7 +61,7 @@ export function vistaVender(){
           <button class="btn primario" id="cobrar" style="width:100%">Confirmar venta</button>
           <p class="carrito-firma">Queda registrada a nombre de ${esc(quienOpera())}</p>
         </div>`
-      : vacio({ titulo:'Carrito vacío', texto:'Tocá el talle de una prenda para sumarla.' })}
+      : vacio({ titulo:'Carrito vacío', texto:'Tocá el talle de un producto para sumarlo.' })}
     </aside>
   </div>`;
 
@@ -127,5 +127,5 @@ export function confirmarVenta(){
   const medio = nombreMedio(ui.medioPago);
   ui.carrito = [];
   bus.pintar();
-  avisar(`Venta registrada: ${plata(totalC)} · ${n} ${n === 1 ? 'prenda' : 'prendas'} · ${medio}`);
+  avisar(`Venta registrada: ${plata(totalC)} · ${n} ${n === 1 ? 'producto' : 'productos'} · ${medio}`);
 }
