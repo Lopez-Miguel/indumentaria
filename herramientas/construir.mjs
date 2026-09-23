@@ -21,8 +21,8 @@ const ORDEN = [
   'js/config.js', 'js/utilidades.js', 'js/almacen.js', 'js/negocio.js',
   'js/auth.js', 'js/estado.js', 'js/componentes.js',
   'js/vistas/panel.js', 'js/vistas/productos.js', 'js/vistas/vender.js',
-  'js/vistas/importar.js', 'js/vistas/caja.js', 'js/vistas/informes.js',
-  'js/vistas/ajustes.js', 'js/app.js'
+  'js/vistas/importar.js', 'js/vistas/pedidos.js', 'js/vistas/caja.js',
+  'js/vistas/informes.js', 'js/vistas/ajustes.js', 'js/app.js'
 ];
 
 /* Se sacan los import/export: al quedar todo en un solo ámbito, sobran. */

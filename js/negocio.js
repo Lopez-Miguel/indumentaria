@@ -173,3 +173,95 @@ export function ranking(ventas){
     talles: Object.entries(porTalle).sort((a, b) => b[1] - a[1])
   };
 }
+
+/* ==========================================================================
+   PEDIDOS A PROVEEDOR
+   ========================================================================== */
+
+export const pedidosPorEstado = estado =>
+  datos.pedidos
+    .filter(p => !estado || p.estado === estado)
+    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+export const totalPedido    = p => p.items.reduce((a, i) => a + i.cant * (i.costoC || 0), 0);
+export const unidadesPedido = p => p.items.reduce((a, i) => a + i.cant, 0);
+
+/* Cuántas unidades de un talle ya están pedidas y todavía no llegaron.
+   Sirve para no volver a pedir lo mismo dos veces. */
+export function yaPedido(productoId, talle){
+  return datos.pedidos
+    .filter(p => p.estado === 'pendiente')
+    .reduce((a, p) => a + p.items
+      .filter(i => i.productoId === productoId && i.talle === talle)
+      .reduce((x, i) => x + i.cant, 0), 0);
+}
+
+/* Qué convendría pedir, mirando el stock bajo.
+   El programa decide QUÉ; cuánto sale de `reponerHasta`, que se configura en
+   Ajustes. Descuenta lo que ya está pedido para no duplicar. */
+export function sugerenciasDePedido(){
+  const meta = datos.reponerHasta;
+  const lineas = [];
+  activos().forEach(p => {
+    tallesBajos(p).forEach(([t, c]) => {
+      const falta = meta - c - yaPedido(p.id, t);
+      if (falta > 0) lineas.push({
+        productoId: p.id, nombre: p.nombre, talle: t,
+        cant: falta, costoC: p.costoC
+      });
+    });
+  });
+  return lineas;
+}
+
+/* Qué productos cambiarían de costo al ingresar estos pedidos.
+   Se muestra antes de confirmar: tocar el costo mueve el precio de venta, y
+   eso no puede pasar sin que la persona lo sepa. */
+export function cambiosDeCosto(ids){
+  const vistos = new Map();
+  ids.forEach(id => {
+    const ped = datos.pedidos.find(x => x.id === id);
+    if (!ped || ped.estado !== 'pendiente') return;
+    ped.items.forEach(i => {
+      const p = datos.productos.find(x => x.id === i.productoId);
+      if (!p || !i.costoC || i.costoC === p.costoC) return;
+      vistos.set(p.id, {
+        nombre: p.nombre,
+        costoViejo: p.costoC, costoNuevo: i.costoC,
+        precioViejo: p.precioC,
+        precioNuevo: Math.round(i.costoC * (1 + p.margen / 100))
+      });
+    });
+  });
+  return [...vistos.values()];
+}
+
+/* Suma al stock lo que traen los pedidos y los marca recibidos.
+   `usuario` llega por parámetro: los cálculos no conocen la interfaz. */
+export function recibirPedidos(ids, { actualizarCostos, usuario }){
+  const cuando = new Date().toISOString();
+  let unidades = 0, recibidos = 0;
+
+  ids.forEach(id => {
+    const ped = datos.pedidos.find(x => x.id === id);
+    if (!ped || ped.estado !== 'pendiente') return;
+
+    ped.items.forEach(i => {
+      const p = datos.productos.find(x => x.id === i.productoId);
+      if (!p) return;
+      p.talles[i.talle] = (p.talles[i.talle] || 0) + i.cant;
+      unidades += i.cant;
+      if (actualizarCostos && i.costoC && i.costoC !== p.costoC){
+        p.costoC = i.costoC;
+        p.precioC = precioDe(p);
+      }
+    });
+
+    ped.estado = 'recibido';
+    ped.recibidoEl = cuando;
+    ped.recibidoPor = usuario;
+    recibidos++;
+  });
+
+  return { recibidos, unidades };
+}

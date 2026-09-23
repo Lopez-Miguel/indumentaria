@@ -1,7 +1,8 @@
 {
   "version": 1,
-  "generado": "2026-09-23T13:23:32.631Z",
+  "generado": "2026-09-23T14:02:27.154Z",
   "umbral": 2,
+  "reponerHasta": 6,
   "productos": [
     {
       "id": "demo001",
@@ -1458,6 +1459,53 @@
       "montoC": 15000000,
       "medioPago": "efectivo",
       "usuario": "Mica"
+    }
+  ],
+  "pedidos": [
+    {
+      "id": "demo020",
+      "fecha": "2026-09-19T11:00:00.000Z",
+      "usuario": "Mica",
+      "proveedor": "Distribuidora Sur",
+      "nota": "Entrega estimada en 10 días",
+      "estado": "pendiente",
+      "items": [
+        {
+          "productoId": "demo001",
+          "nombre": "Remera algodón peinado",
+          "talle": "S",
+          "cant": 5,
+          "costoC": 820000
+        },
+        {
+          "productoId": "demo002",
+          "nombre": "Remera oversize estampada",
+          "talle": "XL",
+          "cant": 5,
+          "costoC": 960000
+        },
+        {
+          "productoId": "demo003",
+          "nombre": "Musculosa deportiva",
+          "talle": "XL",
+          "cant": 5,
+          "costoC": 730000
+        },
+        {
+          "productoId": "demo004",
+          "nombre": "Buzo frisado con capucha",
+          "talle": "S",
+          "cant": 6,
+          "costoC": 1950000
+        },
+        {
+          "productoId": "demo004",
+          "nombre": "Buzo frisado con capucha",
+          "talle": "XL",
+          "cant": 6,
+          "costoC": 1950000
+        }
+      ]
     }
   ]
 }

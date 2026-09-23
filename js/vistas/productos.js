@@ -1,16 +1,24 @@
-import { $, esc, plata, plataCorta, aCentavos, nid, avisar, dialogo, cerrarDialogo, hoyISO, fechaLarga }
-  from '../utilidades.js';
+import { $, $$, esc, plata, plataCorta, aCentavos, nid, avisar, dialogo, cerrarDialogo,
+         hoyISO, fechaLarga } from '../utilidades.js';
 import { datos, guardar } from '../almacen.js';
-import { buscar, activos, stockDe, valorStockVenta, precioDe, conStock } from '../negocio.js';
+import { buscar, activos, stockDe, valorStockVenta, precioDe, conStock,
+         pedidosPorEstado, totalPedido, unidadesPedido, cambiosDeCosto,
+         recibirPedidos } from '../negocio.js';
 import { talle, vacio, buscador } from '../componentes.js';
+import { ESTADOS_PEDIDO } from '../config.js';
 import { ui, bus, quienOpera } from '../estado.js';
 
 export function vistaProductos(){
   $('#subtitulo').textContent =
     `${activos().length} productos · ${activos().reduce((a, p) => a + stockDe(p), 0)} unidades en stock`;
+  const pendientes = pedidosPorEstado('pendiente');
+
   $('#acciones').innerHTML = `
     ${buscador(ui.busqueda)}
     <button class="btn" data-ir="importar">Importar</button>
+    <button class="btn" id="ingresar-pedido" ${pendientes.length ? '' : 'disabled'}
+      title="${pendientes.length ? '' : 'No hay pedidos pendientes'}">
+      Ingresar pedido${pendientes.length ? ` (${pendientes.length})` : ''}</button>
     <button class="btn primario" id="nuevo-producto">Nuevo producto</button>`;
 
   const lista = buscar(ui.busqueda);
@@ -178,6 +186,85 @@ export function editorProducto(id){
         p.activo = false;
         guardar(); cerrarDialogo(); bus.pintar();
         avisar('Producto eliminado');
+      };
+    }
+  });
+}
+
+/* --------------------------------------------------------------------------
+   INGRESAR PEDIDO
+   Se tildan los pedidos que llegaron y su contenido se suma al stock.
+   -------------------------------------------------------------------------- */
+export function dialogoIngresarPedido(){
+  const pendientes = pedidosPorEstado('pendiente');
+  if (!pendientes.length){ avisar('No hay pedidos pendientes', true); return; }
+
+  dialogo({
+    titulo: 'Ingresar mercadería',
+    cuerpo: `
+      <p style="margin:0 0 14px;color:var(--tinta-2);font-size:13.5px">
+        Tildá los pedidos que llegaron. Lo que traen se suma al stock y quedan
+        marcados como recibidos.</p>
+
+      <div class="ing-lista">
+        ${pendientes.map(p => `
+          <label class="ing-pedido">
+            <input type="checkbox" data-pedido="${p.id}">
+            <div style="min-width:0;flex:1">
+              <div class="ing-titulo">${esc(p.proveedor || 'Sin proveedor')}</div>
+              <div class="ing-sub">
+                ${fechaLarga.format(new Date(p.fecha))} ·
+                ${unidadesPedido(p)} unidades · ${esc(p.usuario || 'alguien')}</div>
+              <div class="ing-items">${p.items.map(i =>
+                `${i.cant}× ${esc(i.nombre)} (${esc(i.talle)})`).join(' · ')}</div>
+            </div>
+            <span class="num" style="font-weight:600;white-space:nowrap">${plata(totalPedido(p))}</span>
+          </label>`).join('')}
+      </div>
+
+      <div id="ing-costos" style="margin-top:14px"></div>`,
+    pie: `<button class="btn" data-cerrar>Cancelar</button>
+          <button class="btn primario" id="ing-confirmar" disabled>Ingresar</button>`,
+    alAbrir(){
+      const revisar = () => {
+        const ids = $$('[data-pedido]:checked').map(c => c.dataset.pedido);
+        $('#ing-confirmar').disabled = ids.length === 0;
+        $('#ing-confirmar').textContent = ids.length
+          ? `Ingresar ${ids.length}` : 'Ingresar';
+
+        /* Tocar el costo mueve el precio de venta. Se avisa antes, no después. */
+        const cambios = cambiosDeCosto(ids);
+        $('#ing-costos').innerHTML = cambios.length ? `
+          <div class="ing-aviso">
+            <label style="display:flex;gap:9px;align-items:flex-start;cursor:pointer">
+              <input type="checkbox" id="ing-costos-si" checked style="margin-top:3px">
+              <span><b>Actualizar los costos que cambiaron</b><br>
+              Esto mueve también el precio de venta, porque sale del margen.</span>
+            </label>
+            <div class="ing-cambios">
+              ${cambios.map(c => `<div>
+                <span>${esc(c.nombre)}</span>
+                <span class="num">${plata(c.costoViejo)} → ${plata(c.costoNuevo)}
+                  <small>(venta ${plata(c.precioViejo)} → ${plata(c.precioNuevo)})</small></span>
+              </div>`).join('')}
+            </div>
+          </div>` : '';
+      };
+
+      $('#dlg-cuerpo').addEventListener('change', revisar);
+      revisar();
+
+      $('#ing-confirmar').onclick = () => {
+        const ids = $$('[data-pedido]:checked').map(c => c.dataset.pedido);
+        if (!ids.length) return;
+        const actualizarCostos = !$('#ing-costos-si') || $('#ing-costos-si').checked;
+
+        const r = recibirPedidos(ids, { actualizarCostos, usuario: quienOpera() });
+        guardar();
+        cerrarDialogo();
+        bus.pintar();
+        avisar(`${r.recibidos} ${r.recibidos === 1 ? 'pedido ingresado' : 'pedidos ingresados'} · ` +
+               `${r.unidades} unidades al stock`);
       };
     }
   });

@@ -67,7 +67,7 @@ js/
   estado.js             Lo que la interfaz recuerda mientras se usa.
   componentes.js        Trozos de HTML compartidos entre vistas.
   vistas/               Una por pantalla: panel, productos, vender, importar,
-                        caja, informes, ajustes.
+                        pedidos, caja, informes, ajustes.
   app.js                Router, eventos y arranque.
 
 datos/
@@ -122,6 +122,25 @@ hay después del separador para decidir. Si se toca, hay que probar los dos caso
 **El precio y el costo quedan congelados dentro de cada venta.** No se guarda una
 referencia al producto, se copian los valores. Si mañana cambia el margen de una
 remera, la ganancia de las ventas de ayer no se reescribe.
+
+**Un pedido no toca el stock hasta que se ingresa.** Es el punto de la
+función: si sumara al crearse, el sistema diría que hay mercadería que
+todavía está en el camión. El pedido nace `pendiente`, y `recibirPedidos()`
+es lo único que suma unidades.
+
+**Al ingresar un pedido, el cambio de costo se pregunta, no se aplica solo.**
+El costo puede haber cambiado entre el pedido y la entrega, y tocarlo mueve el
+precio de venta porque sale del margen. `cambiosDeCosto()` arma la lista de lo
+que cambiaría y el diálogo la muestra con una casilla antes de confirmar.
+
+**`reponerHasta` es un ajuste, no una constante.** El programa sabe QUÉ
+reponer mirando el stock; cuánto pedir es una decisión del negocio. La
+sugerencia descuenta lo que ya está pedido y no recibido (`yaPedido()`), para
+no pedir dos veces lo mismo.
+
+**`normalizar()` completa los arreglos que falten.** `Object.assign` deja
+pasar un `pedidos: undefined` de una base guardada antes de esta función, y
+después revienta al recorrerlo. Por eso `conArreglos()` los fuerza uno por uno.
 
 **Las listas muestran solo los talles con stock** (`conStock()` en
 `negocio.js`). Un talle en cero no se puede vender y llena la fila de ruido.

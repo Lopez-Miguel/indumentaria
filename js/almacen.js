@@ -13,18 +13,32 @@
                 del JSON, trabaja contra el navegador y se exporta a mano.
    -------------------------------------------------------------------------- */
 
-import { RUTAS, CLAVE_LOCAL, UMBRAL_POR_DEFECTO } from './config.js';
+import { RUTAS, CLAVE_LOCAL, UMBRAL_POR_DEFECTO, REPONER_HASTA_POR_DEFECTO } from './config.js';
 import { avisar } from './utilidades.js';
 
 const VACIA = () => ({
-  version: 1, umbral: UMBRAL_POR_DEFECTO,
-  productos: [], ventas: [], movimientos: []
+  version: 1,
+  umbral: UMBRAL_POR_DEFECTO,
+  reponerHasta: REPONER_HASTA_POR_DEFECTO,
+  productos: [], ventas: [], movimientos: [], pedidos: []
 });
+
+/* Object.assign deja pasar un `pedidos: undefined` de una base vieja, y
+   después revienta al recorrerlo. Cada arreglo se completa a mano. */
+function conArreglos(d){
+  const base = VACIA();
+  const r = Object.assign(base, d || {});
+  ['productos', 'ventas', 'movimientos', 'pedidos']
+    .forEach(k => { if (!Array.isArray(r[k])) r[k] = []; });
+  if (typeof r.umbral !== 'number') r.umbral = UMBRAL_POR_DEFECTO;
+  if (typeof r.reponerHasta !== 'number') r.reponerHasta = REPONER_HASTA_POR_DEFECTO;
+  return r;
+}
 
 export let datos = VACIA();
 export let modo = 'local';          // 'servidor' | 'local'
 
-const normalizar = d => Object.assign(VACIA(), d || {});
+const normalizar = d => conArreglos(d);
 
 /* ---- arranque ---------------------------------------------------------- */
 

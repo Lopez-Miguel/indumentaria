@@ -2,14 +2,15 @@
 
 import { $, $$, esc, fechaLarga, avisar, cerrarDialogo } from './utilidades.js';
 import { arrancar, modo, guardarYa } from './almacen.js';
-import { productosEnAlerta } from './negocio.js';
+import { productosEnAlerta, pedidosPorEstado } from './negocio.js';
 import { ui, bus } from './estado.js';
 import { verificar, recordarSesion, sesionActiva, cerrarSesion } from './auth.js';
 
 import { vistaPanel }                                  from './vistas/panel.js';
-import { vistaProductos, editorProducto }              from './vistas/productos.js';
+import { vistaProductos, editorProducto, dialogoIngresarPedido } from './vistas/productos.js';
 import { vistaVender, sumarAlCarrito, confirmarVenta } from './vistas/vender.js';
 import { vistaImportar }                               from './vistas/importar.js';
+import { vistaPedidos, editorPedido, cancelarPedido }  from './vistas/pedidos.js';
 import { vistaCaja, editorMovimiento, deshacer, alternarDetalle } from './vistas/caja.js';
 import { vistaInformes }                               from './vistas/informes.js';
 import { vistaAjustes }                                from './vistas/ajustes.js';
@@ -19,6 +20,7 @@ const VISTAS = {
   vender:    { titulo: 'Vender',          sub: 'Tocá un talle para sumarlo al carrito',   pintar: vistaVender },
   productos: { titulo: 'Productos',       sub: '',                                        pintar: vistaProductos },
   importar:  { titulo: 'Importar stock',  sub: 'Pegá las filas copiadas de tu planilla', pintar: vistaImportar },
+  pedidos:   { titulo: 'Pedidos',         sub: '',                                        pintar: vistaPedidos },
   caja:      { titulo: 'Caja',            sub: 'Ventas, ingresos y egresos',             pintar: vistaCaja },
   informes:  { titulo: 'Informes',        sub: '',                                        pintar: vistaInformes },
   ajustes:   { titulo: 'Ajustes',         sub: 'Respaldo y preferencias',                pintar: vistaAjustes }
@@ -37,6 +39,11 @@ function pintar(){
   const marca = $('#marca-stock');
   marca.hidden = alerta === 0;
   marca.textContent = alerta;
+
+  const pend = pedidosPorEstado('pendiente').length;
+  const marcaPed = $('#marca-pedidos');
+  marcaPed.hidden = pend === 0;
+  marcaPed.textContent = pend;
 
   v.pintar();
 }
@@ -79,6 +86,14 @@ document.addEventListener('click', ev => {
   const editar = t.closest('[data-editar]');
   if (editar){ editorProducto(editar.dataset.editar); return; }
   if (t.id === 'nuevo-producto'){ editorProducto(null); return; }
+  if (t.id === 'ingresar-pedido'){ dialogoIngresarPedido(); return; }
+
+  /* pedidos */
+  if (t.id === 'nuevo-pedido' || t.id === 'nuevo-pedido-2'){ editorPedido(null); return; }
+  const edPed = t.closest('[data-editar-pedido]');
+  if (edPed){ editorPedido(edPed.dataset.editarPedido); return; }
+  const canPed = t.closest('[data-cancelar-pedido]');
+  if (canPed){ cancelarPedido(canPed.dataset.cancelarPedido); return; }
 
   /* vender */
   const sumar = t.closest('[data-sumar]');

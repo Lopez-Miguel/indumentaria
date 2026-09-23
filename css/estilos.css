@@ -510,3 +510,112 @@ tbody tr:hover{ background:var(--superficie-2) }
   padding:3px 9px; border-radius:999px;
   background:var(--superficie-2); border:1px dashed var(--linea-2);
 }
+
+/* ==========================================================================
+   PEDIDOS
+   ========================================================================== */
+.pedido{ padding:15px 18px; border-bottom:1px solid var(--linea) }
+.pedido:last-child{ border-bottom:0 }
+.pedido-tope{ display:flex; gap:14px; align-items:flex-start; margin-bottom:10px }
+.pedido-titulo{
+  font-size:15px; font-weight:600;
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+}
+.pedido-sub{ font-size:12.5px; color:var(--tinta-3); margin-top:2px; line-height:1.5 }
+.pedido-monto{ margin-left:auto; text-align:right; white-space:nowrap }
+.pedido-monto .num{ font-size:16px; font-weight:600 }
+.pedido-monto small{ display:block; font-size:12px; color:var(--tinta-3); margin-top:1px }
+
+.pedido-items{
+  background:var(--superficie-2); border:1px solid var(--linea);
+  border-radius:var(--r-ch); padding:4px 0; overflow:hidden;
+}
+.pedido-item{
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto auto;
+  gap:12px; align-items:baseline;
+  padding:6px 13px; font-size:13.5px;
+}
+.pi-nombre{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500 }
+.pi-talle{ color:var(--tinta-3); font-size:12.5px }
+.pi-cant{ color:var(--tinta-2); min-width:48px; text-align:right }
+.pi-costo{ font-weight:600; min-width:92px; text-align:right }
+
+.pedido-nota{
+  margin-top:9px; font-size:13px; color:var(--tinta-2);
+  padding:8px 12px; background:var(--alerta-suave);
+  border-radius:var(--r-ch); border:1px solid #EBD9A8;
+}
+.pedido-pie{ display:flex; gap:7px; margin-top:10px }
+
+.pastilla.es-pendiente{ background:var(--alerta-suave); border-color:#EBD9A8; color:var(--alerta) }
+.pastilla.es-recibido{ background:var(--marca-suave); border-color:#BEDCD9; color:var(--marca-oscuro) }
+.pastilla.es-cancelado{ background:var(--superficie-2); border-color:var(--linea-2); color:var(--tinta-3) }
+
+/* ---- editor ---- */
+.pd-agregar{
+  display:grid; gap:9px; align-items:end;
+  grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto;
+  padding:12px; margin-bottom:12px;
+  background:var(--superficie-2); border:1px solid var(--linea);
+  border-radius:var(--r-ch);
+}
+.pd-agregar label{ display:flex; flex-direction:column; gap:4px; min-width:0 }
+.pd-agregar span{ font-size:11.5px; color:var(--tinta-2); font-weight:500 }
+.pd-agregar select, .pd-agregar input{ min-height:38px; padding:7px 10px; font-size:13.5px }
+
+.pd-tabla{ border:1px solid var(--linea); border-radius:var(--r-ch); overflow:hidden }
+.pd-linea{
+  display:grid; grid-template-columns:minmax(0,1fr) 74px 104px auto;
+  gap:10px; align-items:center;
+  padding:8px 12px; border-bottom:1px solid var(--linea);
+}
+.pd-nombre{ font-size:13.5px; font-weight:500; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.pd-nombre small{ display:block; font-size:12px; color:var(--tinta-3); font-weight:400 }
+.pd-linea input{ min-height:34px; padding:5px 8px; font-size:13.5px; text-align:right }
+.pd-sub{ text-align:right; font-weight:600; font-size:13.5px }
+.pd-total{
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding:11px 13px; background:var(--superficie-2); font-size:13.5px;
+}
+.pd-total b{ font-size:17px }
+
+/* ---- ingresar mercadería ---- */
+.ing-lista{ display:grid; gap:9px }
+.ing-pedido{
+  display:flex; gap:12px; align-items:flex-start; cursor:pointer;
+  padding:12px 14px; border:1px solid var(--linea-2);
+  border-radius:var(--r-ch); background:var(--superficie);
+  transition:border-color .12s, background .12s;
+}
+.ing-pedido:hover{ background:var(--superficie-2) }
+.ing-pedido:has(input:checked){ border-color:var(--marca); background:var(--marca-suave) }
+.ing-pedido input{ width:18px; height:18px; margin-top:2px; flex:none; accent-color:var(--marca) }
+.ing-titulo{ font-size:14.5px; font-weight:600 }
+.ing-sub{ font-size:12.5px; color:var(--tinta-3); margin-top:1px }
+.ing-items{ font-size:12.5px; color:var(--tinta-2); margin-top:6px; line-height:1.5 }
+
+.ing-aviso{
+  padding:12px 14px; border-radius:var(--r-ch);
+  background:var(--alerta-suave); border:1px solid #EBD9A8;
+  font-size:13px; color:var(--tinta);
+}
+.ing-cambios{ margin-top:10px; display:grid; gap:5px; font-size:12.5px }
+.ing-cambios div{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap }
+.ing-cambios small{ color:var(--tinta-3) }
+
+@media (max-width:620px){
+  .pd-agregar{ grid-template-columns:1fr 1fr }
+  .pd-agregar label:first-child{ grid-column:1 / -1 }
+  .pd-agregar button{ grid-column:1 / -1 }
+  .pd-linea{ grid-template-columns:minmax(0,1fr) 64px; gap:6px 10px }
+  .pd-sub{ text-align:left; grid-column:1 }
+  .pedido-item{ grid-template-columns:minmax(0,1fr) auto; gap:4px 10px }
+  .pi-talle{ grid-column:1 }
+  .pi-cant{ text-align:left; min-width:0 }
+}
+
+.ya-pedido{
+  margin-top:5px; font-size:12px; color:var(--marca);
+  font-weight:500; text-align:right;
+}

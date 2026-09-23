@@ -13,6 +13,18 @@ export const CLAVE_SESION = 'indumentaria.sesion';
    Después se puede cambiar desde Ajustes y queda guardado en la base. */
 export const UMBRAL_POR_DEFECTO = 2;
 
+/* Hasta cuántas unidades por talle apunta a llevar un pedido sugerido.
+   El programa sabe QUÉ reponer mirando el stock; cuánto pedir es una decisión
+   del negocio, así que es un número configurable desde Ajustes y no una
+   constante escondida en el código. */
+export const REPONER_HASTA_POR_DEFECTO = 6;
+
+export const ESTADOS_PEDIDO = {
+  pendiente: 'Pendiente',
+  recibido:  'Recibido',
+  cancelado: 'Cancelado'
+};
+
 /* Formas de cobro que ofrece la pantalla de venta.
    Para agregar una, sumá una línea acá: aparece sola en el carrito, en la
    caja y en los informes. El `id` es lo que queda guardado en cada venta,

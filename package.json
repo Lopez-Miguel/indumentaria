@@ -8,7 +8,8 @@
     "start": "node servidor/servidor.mjs",
     "semilla": "node herramientas/semilla.mjs",
     "demo": "node herramientas/construir.mjs",
-    "colisiones": "node herramientas/prueba-colisiones.mjs"
+    "colisiones": "node herramientas/prueba-colisiones.mjs",
+    "pedidos": "node herramientas/prueba-pedidos.mjs"
   },
   "engines": {
     "node": ">=18"

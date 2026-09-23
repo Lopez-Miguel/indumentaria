@@ -106,13 +106,32 @@ movimientos.push({ id: nid(), fecha: fIni.toISOString(), tipo: 'ingreso',
                    concepto: 'Aporte de caja inicial', montoC: 150000 * 100,
                    medioPago: 'efectivo', usuario: VENDEDORES[0] });
 
+/* Un pedido pendiente, para que la pantalla no arranque vacía */
+const pedidos = [];
+const fPed = new Date(hoyBase()); fPed.setDate(fPed.getDate() - 4); fPed.setHours(11, 0, 0, 0);
+const flacos = [];
+productos.forEach(p => {
+  Object.entries(p.talles).forEach(([t, c]) => {
+    if (c <= 2 && flacos.length < 5)
+      flacos.push({ productoId: p.id, nombre: p.nombre, talle: t,
+                    cant: 6 - c, costoC: p.costoC });
+  });
+});
+if (flacos.length) pedidos.push({
+  id: nid(), fecha: fPed.toISOString(), usuario: VENDEDORES[0],
+  proveedor: 'Distribuidora Sur', nota: 'Entrega estimada en 10 días',
+  estado: 'pendiente', items: flacos
+});
+
 mkdirSync(dirname(salida), { recursive: true });
 writeFileSync(salida, JSON.stringify({
   version: 1,
   generado: new Date().toISOString(),
   umbral: 2,
-  productos, ventas, movimientos
+  reponerHasta: 6,
+  productos, ventas, movimientos, pedidos
 }, null, 2), 'utf8');
 
-console.log(`Listo: ${productos.length} productos, ${ventas.length} ventas, ${movimientos.length} movimientos`);
+console.log(`Listo: ${productos.length} productos, ${ventas.length} ventas, ` +
+            `${movimientos.length} movimientos, ${pedidos.length} pedidos`);
 console.log(salida);

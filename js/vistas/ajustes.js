@@ -35,8 +35,12 @@ export function vistaAjustes(){
         <div class="tarjeta-cuerpo">
           <label class="campo"><span>Avisame cuando un talle quede en esta cantidad o menos</span>
             <input type="number" id="a-umbral" value="${datos.umbral}" min="0" max="50"></label>
+          <label class="campo" style="margin-top:12px">
+            <span>Al sugerir un pedido, reponer hasta esta cantidad por talle</span>
+            <input type="number" id="a-reponer" value="${datos.reponerHasta}" min="1" max="200"></label>
           <p style="font-size:13px;color:var(--tinta-2);margin:10px 0 0">
-            Ahora hay ${productosEnAlerta().length} productos con algún talle por reponer.</p>
+            Ahora hay ${productosEnAlerta().length} productos con algún talle por reponer.
+            El sistema sabe qué reponer mirando el stock; cuánto pedir sale de este número.</p>
         </div>
       </section>
 
@@ -81,6 +85,11 @@ export function vistaAjustes(){
   $('#a-umbral').onchange = e => {
     datos.umbral = Math.max(0, parseInt(e.target.value) || 0);
     guardar(); bus.pintar(); avisar('Aviso actualizado');
+  };
+
+  $('#a-reponer').onchange = e => {
+    datos.reponerHasta = Math.max(1, parseInt(e.target.value) || 1);
+    guardar(); avisar('Cantidad sugerida actualizada');
   };
 
   $('#a-exportar').onclick = () => {
