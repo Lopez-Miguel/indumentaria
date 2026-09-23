@@ -37,6 +37,7 @@ const CATALOGO = [
 const VENDEDORES = ['Mica'];
 const MEDIOS = ['efectivo', 'efectivo', 'efectivo', 'transferencia',
                 'mercadopago', 'mercadopago', 'debito', 'credito'];
+const MEDIOS_EGRESO = ['transferencia', 'efectivo', 'efectivo', 'transferencia', 'mercadopago'];
 
 const cargadoEl = new Date(hoyBase()); cargadoEl.setDate(cargadoEl.getDate() - 30);
 
@@ -97,12 +98,13 @@ const GASTOS = [
 GASTOS.forEach(([concepto, monto], i) => {
   const f = new Date(hoy); f.setDate(f.getDate() - (i * 5 + 2)); f.setHours(12, 0, 0, 0);
   movimientos.push({ id: nid(), fecha: f.toISOString(), tipo: 'egreso', concepto,
-                     montoC: monto * 100, usuario: VENDEDORES[0] });
+                     montoC: monto * 100, medioPago: MEDIOS_EGRESO[i % MEDIOS_EGRESO.length],
+                     usuario: VENDEDORES[0] });
 });
 const fIni = new Date(hoy); fIni.setDate(fIni.getDate() - 9); fIni.setHours(9, 0, 0, 0);
 movimientos.push({ id: nid(), fecha: fIni.toISOString(), tipo: 'ingreso',
                    concepto: 'Aporte de caja inicial', montoC: 150000 * 100,
-                   usuario: VENDEDORES[0] });
+                   medioPago: 'efectivo', usuario: VENDEDORES[0] });
 
 mkdirSync(dirname(salida), { recursive: true });
 writeFileSync(salida, JSON.stringify({

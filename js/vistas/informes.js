@@ -33,26 +33,8 @@ export function vistaInformes(){
       ${cifra({ titulo:'Venta promedio', valor: plataCorta(s.ticket), pie:'por operación' })}
     </dl>
 
-    <section class="tarjeta" style="margin-bottom:16px">
-      <div class="tarjeta-tope"><h3>Ventas por día</h3></div>
-      <div class="tarjeta-cuerpo">${grafico(diasDe(r), r)}</div>
-    </section>
-
-    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
-      <section class="tarjeta">
-        <div class="tarjeta-tope"><h3>Lo que más se vendió</h3></div>
-        ${productos.length ? `<div class="tabla-env"><table>
-          <thead><tr><th>Producto</th><th class="der">Unid.</th>
-            <th class="der">Vendido</th><th class="der">Ganancia</th></tr></thead>
-          <tbody>${productos.slice(0, 12).map(p => `
-            <tr><td class="prod-nombre">${esc(p.nombre)}</td>
-              <td class="der num">${p.unidades}</td>
-              <td class="der num">${plata(p.totalC)}</td>
-              <td class="der num pos">${plata(p.gananciaC)}</td></tr>`).join('')}</tbody>
-        </table></div>` : vacio({ titulo:'Sin ventas en el período',
-                                  texto:'Probá con un rango más amplio.' })}
-      </section>
-
+    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+                margin-bottom:16px">
       <section class="tarjeta">
         <div class="tarjeta-tope"><h3>Cómo te pagaron</h3></div>
         <div class="tarjeta-cuerpo">
@@ -84,6 +66,23 @@ export function vistaInformes(){
             : '<p style="color:var(--tinta-3);margin:0">Sin datos todavía.</p>'}
         </div>
       </section>
+    </div>
+
+    <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+                margin-bottom:16px">
+      <section class="tarjeta">
+        <div class="tarjeta-tope"><h3>Lo que más se vendió</h3></div>
+        ${productos.length ? `<div class="tabla-env"><table>
+          <thead><tr><th>Producto</th><th class="der">Unid.</th>
+            <th class="der">Vendido</th><th class="der">Ganancia</th></tr></thead>
+          <tbody>${productos.slice(0, 12).map(p => `
+            <tr><td class="prod-nombre">${esc(p.nombre)}</td>
+              <td class="der num">${p.unidades}</td>
+              <td class="der num">${plata(p.totalC)}</td>
+              <td class="der num pos">${plata(p.gananciaC)}</td></tr>`).join('')}</tbody>
+        </table></div>` : vacio({ titulo:'Sin ventas en el período',
+                                  texto:'Probá con un rango más amplio.' })}
+      </section>
 
       ${usuarios.length > 1 ? `
       <section class="tarjeta">
@@ -96,7 +95,12 @@ export function vistaInformes(){
               <td class="der num">${plata(u.totalC)}</td></tr>`).join('')}</tbody>
         </table></div>
       </section>` : ''}
-    </div>`;
+    </div>
+
+    <section class="tarjeta">
+      <div class="tarjeta-tope"><h3>Ventas por día</h3></div>
+      <div class="tarjeta-cuerpo">${grafico(diasDe(r), r)}</div>
+    </section>`;
 
   $('#bajar-csv').onclick = () => descargarCSV(s, r);
 }

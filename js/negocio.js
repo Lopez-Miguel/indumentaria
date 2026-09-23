@@ -10,6 +10,14 @@ export const valorStockVenta = p => stockDe(p) * p.precioC;
 
 export const activos = () => datos.productos.filter(p => p.activo !== false);
 
+/* Los talles que todavía tienen unidades. Las listas de productos y la
+   pantalla de venta muestran solo estos: un talle en cero no se puede vender
+   y llena la fila de ruido. Para reponerlo está el editor del producto, que
+   sigue mostrando todos. */
+export function conStock(p){
+  return Object.entries(p.talles || {}).filter(([, c]) => c > 0);
+}
+
 export function tallesBajos(p){
   return Object.entries(p.talles || {}).filter(([, c]) => c <= datos.umbral);
 }

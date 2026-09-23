@@ -20,7 +20,8 @@ const ES_CAT    = /^(categoria|categoría|rubro|tipo)$/;
 const ES_MARGEN = /^(margen|ganancia|%|porcentaje)$/;
 
 export function vistaImportar(){
-  $('#acciones').innerHTML = '';
+  $('#acciones').innerHTML =
+    '<button class="btn" data-ir="productos">Volver a productos</button>';
   $('#hoja').innerHTML = `
     <section class="tarjeta" style="margin-bottom:16px">
       <div class="tarjeta-tope"><h3>Pegar desde la planilla</h3></div>

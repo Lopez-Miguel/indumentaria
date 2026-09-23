@@ -41,11 +41,17 @@ function pintar(){
   v.pintar();
 }
 
+/* Importar ya no está en el menú: se entra desde el botón de Productos.
+   Mientras se está ahí, el menú deja marcado Productos para que no quede
+   ninguna opción encendida. */
+const EN_EL_MENU = { importar: 'productos' };
+
 function ir(destino){
   ui.vista = destino;
   ui.busqueda = '';
+  const marcado = EN_EL_MENU[destino] || destino;
   $$('#nav button').forEach(b =>
-    b.setAttribute('aria-current', String(b.dataset.vista === destino)));
+    b.setAttribute('aria-current', String(b.dataset.vista === marcado)));
   $('#lienzo').scrollTop = 0;
   pintar();
 }

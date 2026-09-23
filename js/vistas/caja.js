@@ -14,7 +14,7 @@ import { $, esc, plata, plataCorta, hora, nombreDia, dia, nid, aCentavos, fechaL
 import { datos, guardar } from '../almacen.js';
 import { rango, resumen } from '../negocio.js';
 import { cifra, selectorRango, vacio } from '../componentes.js';
-import { nombreMedio } from '../config.js';
+import { MEDIOS_PAGO, MEDIO_POR_DEFECTO, nombreMedio } from '../config.js';
 import { ui, bus, quienOpera } from '../estado.js';
 
 /* Los atributos width, height, fill y stroke van en el propio SVG, no solo en
@@ -55,7 +55,7 @@ export function vistaCaja(){
     ...s.movs.map(m => ({
       id: m.id, fecha: m.fecha, clase: m.tipo, signo: m.tipo === 'egreso' ? -1 : 1,
       montoC: m.montoC, titulo: m.concepto, ganancia: null, items: null,
-      usuario: m.usuario, medio: null
+      usuario: m.usuario, medio: m.medioPago
     }))
   ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
@@ -167,6 +167,12 @@ export function editorMovimiento(tipo){
           placeholder="${tipo === 'egreso' ? 'Alquiler del local' : 'Aporte de caja'}"></label>
       <label class="campo"><span>Monto</span>
         <input type="text" id="m-monto" inputmode="decimal" placeholder="45000"></label>
+      <label class="campo">
+        <span>${tipo === 'egreso' ? 'Cómo lo pagaste' : 'Cómo lo cobraste'}</span>
+        <select id="m-medio">
+          ${MEDIOS_PAGO.map(m => `<option value="${m.id}"
+            ${m.id === MEDIO_POR_DEFECTO ? 'selected' : ''}>${esc(m.nombre)}</option>`).join('')}
+        </select></label>
       <label class="campo"><span>Fecha</span>
         <input type="date" id="m-fecha" value="${new Date().toISOString().slice(0, 10)}"></label>
       <p class="firma" style="margin:0">Queda registrado a nombre de ${esc(quienOpera())}</p>
@@ -182,6 +188,7 @@ export function editorMovimiento(tipo){
 
         const f = new Date($('#m-fecha').value + 'T12:00:00');
         datos.movimientos.push({ id: nid(), fecha: f.toISOString(), tipo, concepto, montoC,
+                                 medioPago: $('#m-medio').value,
                                  usuario: quienOpera() });
         guardar(); cerrarDialogo(); bus.pintar();
         avisar(tipo === 'egreso' ? 'Egreso registrado' : 'Ingreso registrado');

@@ -502,3 +502,11 @@ tbody tr:hover{ background:var(--superficie-2) }
   .rango label{ flex:1 }
   .rango input{ min-width:0; width:100% }
 }
+
+/* Producto sin ninguna unidad: se muestran solo los talles con stock, así que
+   la celda quedaría vacía. */
+.sin-stock{
+  font-size:12.5px; color:var(--tinta-3);
+  padding:3px 9px; border-radius:999px;
+  background:var(--superficie-2); border:1px dashed var(--linea-2);
+}

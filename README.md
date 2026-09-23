@@ -123,6 +123,16 @@ hay después del separador para decidir. Si se toca, hay que probar los dos caso
 referencia al producto, se copian los valores. Si mañana cambia el margen de una
 remera, la ganancia de las ventas de ayer no se reescribe.
 
+**Las listas muestran solo los talles con stock** (`conStock()` en
+`negocio.js`). Un talle en cero no se puede vender y llena la fila de ruido.
+El editor del producto sí los muestra todos: es el único lugar desde donde se
+repone un talle que llegó a cero, así que ocultarlos ahí lo dejaría sin salida.
+
+**Importar no está en el menú.** Se entra desde el botón de Productos y se
+vuelve con "Volver a productos". Mientras se está en esa pantalla, el menú
+deja marcado Productos (`EN_EL_MENU` en `app.js`) para que no quede ninguna
+opción encendida.
+
 **Los productos eliminados se marcan `activo: false`, no se borran.** El historial
 de ventas guarda el id del producto: borrarlo de verdad rompería los informes
 viejos.

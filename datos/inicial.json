@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generado": "2026-09-23T11:17:09.226Z",
+  "generado": "2026-09-23T13:23:32.631Z",
   "umbral": 2,
   "productos": [
     {
@@ -1411,6 +1411,7 @@
       "tipo": "egreso",
       "concepto": "Alquiler del local",
       "montoC": 42000000,
+      "medioPago": "transferencia",
       "usuario": "Mica"
     },
     {
@@ -1419,6 +1420,7 @@
       "tipo": "egreso",
       "concepto": "Luz y agua",
       "montoC": 6800000,
+      "medioPago": "efectivo",
       "usuario": "Mica"
     },
     {
@@ -1427,6 +1429,7 @@
       "tipo": "egreso",
       "concepto": "Bolsas y etiquetas",
       "montoC": 3200000,
+      "medioPago": "efectivo",
       "usuario": "Mica"
     },
     {
@@ -1435,6 +1438,7 @@
       "tipo": "egreso",
       "concepto": "Publicidad en redes",
       "montoC": 4500000,
+      "medioPago": "transferencia",
       "usuario": "Mica"
     },
     {
@@ -1443,6 +1447,7 @@
       "tipo": "egreso",
       "concepto": "Flete de mercadería",
       "montoC": 5400000,
+      "medioPago": "mercadopago",
       "usuario": "Mica"
     },
     {
@@ -1451,6 +1456,7 @@
       "tipo": "ingreso",
       "concepto": "Aporte de caja inicial",
       "montoC": 15000000,
+      "medioPago": "efectivo",
       "usuario": "Mica"
     }
   ]

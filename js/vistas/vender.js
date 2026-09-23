@@ -1,6 +1,6 @@
 import { $, esc, plata, nid, avisar, hoyISO } from '../utilidades.js';
 import { datos, guardar } from '../almacen.js';
-import { buscar } from '../negocio.js';
+import { buscar, conStock } from '../negocio.js';
 import { claseTalle, vacio, buscador } from '../componentes.js';
 import { MEDIOS_PAGO, nombreMedio } from '../config.js';
 import { ui, bus, quienOpera } from '../estado.js';
@@ -19,10 +19,11 @@ export function vistaVender(){
         <h4>${esc(p.nombre)}</h4>
         <div class="cat">${esc(p.categoria || 'Sin categoría')}</div>
         <div class="precio num">${plata(p.precioC)}</div>
-        <div class="talles">${Object.entries(p.talles || {}).map(([t, c]) => `
-          <button class="talle ${claseTalle(c)}" ${c === 0 ? 'disabled' : ''}
+        <div class="talles">${conStock(p).map(([t, c]) => `
+          <button class="talle ${claseTalle(c)}"
             data-sumar="${p.id}" data-talle="${esc(t)}" title="${c} en stock">
-            <b>${esc(t)}</b><small>${c}</small></button>`).join('')}</div>
+            <b>${esc(t)}</b><small>${c}</small></button>`).join('')
+          || '<span class="sin-stock">Sin stock</span>'}</div>
       </div>`).join('')}</div>`
       : `<section class="tarjeta">${vacio({
           titulo:'No hay productos para vender',

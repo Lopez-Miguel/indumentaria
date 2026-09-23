@@ -1,7 +1,7 @@
 import { $, esc, plata, plataCorta, aCentavos, nid, avisar, dialogo, cerrarDialogo, hoyISO, fechaLarga }
   from '../utilidades.js';
 import { datos, guardar } from '../almacen.js';
-import { buscar, activos, stockDe, valorStockVenta, precioDe } from '../negocio.js';
+import { buscar, activos, stockDe, valorStockVenta, precioDe, conStock } from '../negocio.js';
 import { talle, vacio, buscador } from '../componentes.js';
 import { ui, bus, quienOpera } from '../estado.js';
 
@@ -28,7 +28,8 @@ export function vistaProductos(){
             <td><div class="prod-nombre">${esc(p.nombre)}</div>
                 <div class="prod-cat">${esc(p.categoria || 'Sin categoría')}</div></td>
             <td><div class="talles">${
-              Object.entries(p.talles || {}).map(([t, c]) => talle(t, c)).join('') || '—'}</div></td>
+              conStock(p).map(([t, c]) => talle(t, c)).join('')
+              || '<span class="sin-stock">Sin stock</span>'}</div></td>
             <td class="der num">${plata(p.costoC)}</td>
             <td class="der num">${p.margen}%</td>
             <td class="der num" style="font-weight:600">${plata(p.precioC)}</td>
