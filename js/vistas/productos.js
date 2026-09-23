@@ -1,9 +1,9 @@
-import { $, esc, plata, plataCorta, aCentavos, nid, avisar, dialogo, cerrarDialogo }
+import { $, esc, plata, plataCorta, aCentavos, nid, avisar, dialogo, cerrarDialogo, hoyISO, fechaLarga }
   from '../utilidades.js';
 import { datos, guardar } from '../almacen.js';
 import { buscar, activos, stockDe, valorStockVenta, precioDe } from '../negocio.js';
 import { talle, vacio, buscador } from '../componentes.js';
-import { ui, bus } from '../estado.js';
+import { ui, bus, quienOpera } from '../estado.js';
 
 export function vistaProductos(){
   $('#subtitulo').textContent =
@@ -20,7 +20,8 @@ export function vistaProductos(){
         <thead><tr>
           <th>Producto</th><th>Stock por talle</th>
           <th class="der">Costo</th><th class="der">Margen</th>
-          <th class="der">Precio</th><th class="der">Valor</th><th></th>
+          <th class="der">Precio</th><th class="der">Valor</th>
+          <th>Cargado por</th><th></th>
         </tr></thead>
         <tbody>${lista.map(p => `
           <tr>
@@ -32,6 +33,7 @@ export function vistaProductos(){
             <td class="der num">${p.margen}%</td>
             <td class="der num" style="font-weight:600">${plata(p.precioC)}</td>
             <td class="der num" style="color:var(--tinta-2)">${plataCorta(valorStockVenta(p))}</td>
+            <td style="color:var(--tinta-2);font-size:13.5px;white-space:nowrap">${esc(p.creadoPor || '—')}</td>
             <td class="der"><button class="btn chico plano" data-editar="${p.id}">Editar</button></td>
           </tr>`).join('')}</tbody>
       </table></div></section>`
@@ -95,6 +97,12 @@ export function editorProducto(id){
             <button class="btn chico" id="e-talle-mas">Agregar</button>
           </div>
         </div>
+
+        <p class="firma">${p
+          ? `Cargado por ${esc(p.creadoPor || 'alguien')}${
+              p.creadoEl ? ' el ' + fechaLarga.format(new Date(p.creadoEl)) : ''}${
+              p.modificadoPor ? `. Última modificación de ${esc(p.modificadoPor)}` : ''}.`
+          : `Se va a guardar a nombre de ${esc(quienOpera())}.`}</p>
       </div>`,
     pie: `${p ? '<button class="btn riesgo" id="e-borrar" style="margin-right:auto">Eliminar</button>' : ''}
           <button class="btn" data-cerrar>Cancelar</button>
@@ -147,9 +155,14 @@ export function editorProducto(id){
         if (p){
           Object.assign(p, { nombre, categoria: $('#e-cat').value.trim(), costoC, margen, talles: limpios });
           p.precioC = precioDe(p);
+          /* Quién lo cargó no se pisa nunca: se registra aparte quién lo tocó
+             por última vez. */
+          p.modificadoPor = quienOpera();
+          p.modificadoEl  = hoyISO();
         } else {
           const np = { id: nid(), nombre, categoria: $('#e-cat').value.trim(),
-                       costoC, margen, talles: limpios, activo: true };
+                       costoC, margen, talles: limpios, activo: true,
+                       creadoPor: quienOpera(), creadoEl: hoyISO() };
           np.precioC = precioDe(np);
           datos.productos.push(np);
         }

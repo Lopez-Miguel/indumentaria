@@ -37,8 +37,28 @@ const css      = await leer('css/estilos.css');
 const usuarios = await leer('datos/usuarios.json');
 const inicial  = await leer('datos/inicial.json');
 
+/* Al aplanar, todos los módulos caen en un mismo ámbito: dos archivos que
+   declaren el mismo nombre arriba de todo rompen el archivo con un
+   "has already been declared" que solo se ve al abrirlo. Se avisa acá. */
+const declarado = new Map();
+const DECL = /^(?:export\s+)?(?:const|let|var|function|async function|class)\s+([A-Za-z_$][\w$]*)/gm;
+
 let js = '';
-for (const p of ORDEN) js += `\n/* ===== ${p} ===== */\n` + aplanar(await leer(p));
+for (const p of ORDEN){
+  const crudo = await leer(p);
+  for (const m of crudo.matchAll(DECL)){
+    const nombre = m[1];
+    if (declarado.has(nombre)){
+      console.error(`\n  Nombre repetido: "${nombre}"`);
+      console.error(`    ya estaba en ${declarado.get(nombre)}`);
+      console.error(`    y vuelve en   ${p}`);
+      console.error('  Renombrá uno de los dos: al aplanar chocan.\n');
+      process.exit(1);
+    }
+    declarado.set(nombre, p);
+  }
+  js += `\n/* ===== ${p} ===== */\n` + aplanar(crudo);
+}
 
 /* En un solo archivo no hay fetch que valga: los JSON van incrustados y se
    sirven desde memoria interceptando las tres rutas que usa el programa. */
@@ -72,7 +92,7 @@ window.fetch = (url, opciones) => {
    reemplazo, "$$" significa un "$" literal y "$1" un grupo capturado, así que
    el código (que usa $$ para querySelectorAll) saldría corrompido. */
 const salida = html
-  .replace('<link rel="stylesheet" href="css/estilos.css">', () => `<style>\n${css}\n</style>`)
+  .replace(/<link rel="stylesheet" href="css\/estilos\.css[^"]*">/, () => `<style>\n${css}\n</style>`)
   .replace('<script type="module" src="js/app.js"></script>',
            () => `<script type="module">\n${puente}\n${js}\n</script>`);
 

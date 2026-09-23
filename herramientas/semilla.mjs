@@ -34,12 +34,22 @@ const CATALOGO = [
   ['Short de baño',             'Shorts',    11400, 125, { S: 6, M: 7, L: 5, XL: 3 }]
 ];
 
+const VENDEDORES = ['Mica'];
+const MEDIOS = ['efectivo', 'efectivo', 'efectivo', 'transferencia',
+                'mercadopago', 'mercadopago', 'debito', 'credito'];
+
+const cargadoEl = new Date(hoyBase()); cargadoEl.setDate(cargadoEl.getDate() - 30);
+
+function hoyBase(){ const f = new Date(); f.setHours(0, 0, 0, 0); return f; }
+
 const productos = CATALOGO.map(([nombre, categoria, costo, margen, talles]) => {
   const costoC = costo * 100;
   return {
     id: nid(), nombre, categoria, costoC, margen,
     precioC: Math.round(costoC * (1 + margen / 100)),
-    talles: { ...talles }, activo: true
+    talles: { ...talles }, activo: true,
+    creadoPor: VENDEDORES[0],
+    creadoEl: cargadoEl.toISOString()
   };
 });
 
@@ -67,7 +77,12 @@ for (let d = 23; d >= 0; d--) {
     if (!items.length) continue;
     const totalC = items.reduce((a, i) => a + i.precioC * i.cant, 0);
     const costoC = items.reduce((a, i) => a + i.costoC * i.cant, 0);
-    ventas.push({ id: nid(), fecha: f.toISOString(), items, totalC, gananciaC: totalC - costoC });
+    ventas.push({
+      id: nid(), fecha: f.toISOString(),
+      usuario: VENDEDORES[Math.floor(azar() * VENDEDORES.length)],
+      medioPago: MEDIOS[Math.floor(azar() * MEDIOS.length)],
+      items, totalC, gananciaC: totalC - costoC
+    });
   }
 }
 
@@ -81,11 +96,13 @@ const GASTOS = [
 ];
 GASTOS.forEach(([concepto, monto], i) => {
   const f = new Date(hoy); f.setDate(f.getDate() - (i * 5 + 2)); f.setHours(12, 0, 0, 0);
-  movimientos.push({ id: nid(), fecha: f.toISOString(), tipo: 'egreso', concepto, montoC: monto * 100 });
+  movimientos.push({ id: nid(), fecha: f.toISOString(), tipo: 'egreso', concepto,
+                     montoC: monto * 100, usuario: VENDEDORES[0] });
 });
 const fIni = new Date(hoy); fIni.setDate(fIni.getDate() - 9); fIni.setHours(9, 0, 0, 0);
 movimientos.push({ id: nid(), fecha: fIni.toISOString(), tipo: 'ingreso',
-                   concepto: 'Aporte de caja inicial', montoC: 150000 * 100 });
+                   concepto: 'Aporte de caja inicial', montoC: 150000 * 100,
+                   usuario: VENDEDORES[0] });
 
 mkdirSync(dirname(salida), { recursive: true });
 writeFileSync(salida, JSON.stringify({

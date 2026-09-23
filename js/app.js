@@ -8,7 +8,7 @@ import { verificar, recordarSesion, sesionActiva, cerrarSesion } from './auth.js
 
 import { vistaPanel }                                  from './vistas/panel.js';
 import { vistaProductos, editorProducto }              from './vistas/productos.js';
-import { vistaVender, sumarAlTicket, confirmarVenta }  from './vistas/vender.js';
+import { vistaVender, sumarAlCarrito, confirmarVenta } from './vistas/vender.js';
 import { vistaImportar }                               from './vistas/importar.js';
 import { vistaCaja, editorMovimiento, deshacer, alternarDetalle } from './vistas/caja.js';
 import { vistaInformes }                               from './vistas/informes.js';
@@ -16,7 +16,7 @@ import { vistaAjustes }                                from './vistas/ajustes.js
 
 const VISTAS = {
   panel:     { titulo: 'Panel',           sub: 'Cómo viene el negocio',                  pintar: vistaPanel },
-  vender:    { titulo: 'Vender',          sub: 'Tocá un talle para sumarlo al ticket',   pintar: vistaVender },
+  vender:    { titulo: 'Vender',          sub: 'Tocá un talle para sumarlo al carrito',   pintar: vistaVender },
   productos: { titulo: 'Productos',       sub: '',                                        pintar: vistaProductos },
   importar:  { titulo: 'Importar stock',  sub: 'Pegá las filas copiadas de tu planilla', pintar: vistaImportar },
   caja:      { titulo: 'Caja',            sub: 'Ventas, ingresos y egresos',             pintar: vistaCaja },
@@ -76,10 +76,10 @@ document.addEventListener('click', ev => {
 
   /* vender */
   const sumar = t.closest('[data-sumar]');
-  if (sumar && !sumar.disabled){ sumarAlTicket(sumar.dataset.sumar, sumar.dataset.talle); return; }
+  if (sumar && !sumar.disabled){ sumarAlCarrito(sumar.dataset.sumar, sumar.dataset.talle); return; }
   const quitar = t.closest('[data-quitar]');
-  if (quitar){ ui.ticket.splice(+quitar.dataset.quitar, 1); vistaVender(); return; }
-  if (t.id === 'vaciar-ticket'){ ui.ticket = []; vistaVender(); return; }
+  if (quitar){ ui.carrito.splice(+quitar.dataset.quitar, 1); vistaVender(); return; }
+  if (t.id === 'vaciar-carrito'){ ui.carrito = []; vistaVender(); return; }
   if (t.id === 'cobrar'){ confirmarVenta(); return; }
 
   /* caja */
@@ -92,12 +92,31 @@ document.addEventListener('click', ev => {
 
   /* rangos */
   const rc = t.closest('[data-rango-caja]');
-  if (rc){ ui.rangoCaja = rc.dataset.rangoCaja; vistaCaja(); return; }
+  if (rc){ ui.rangoCaja.clave = rc.dataset.rangoCaja; vistaCaja(); return; }
   const ri = t.closest('[data-rango-informe]');
-  if (ri){ ui.rangoInforme = ri.dataset.rangoInforme; vistaInformes(); return; }
+  if (ri){ ui.rangoInforme.clave = ri.dataset.rangoInforme; vistaInformes(); return; }
 
   /* sesión */
   if (t.id === 'salir'){ salir(); return; }
+});
+
+/* Las dos fechas del rango libre. `change` y no `click`, por eso va aparte. */
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  const mapa = [
+    ['data-rango-caja-desde',    ui.rangoCaja,    'desde', vistaCaja],
+    ['data-rango-caja-hasta',    ui.rangoCaja,    'hasta', vistaCaja],
+    ['data-rango-informe-desde', ui.rangoInforme, 'desde', vistaInformes],
+    ['data-rango-informe-hasta', ui.rangoInforme, 'hasta', vistaInformes]
+  ];
+  for (const [attr, destino, campo, pintarVista] of mapa){
+    if (t.hasAttribute && t.hasAttribute(attr)){
+      destino[campo] = t.value;
+      destino.clave = 'personalizado';
+      pintarVista();
+      return;
+    }
+  }
 });
 
 document.addEventListener('keydown', ev => {
@@ -147,7 +166,7 @@ async function abrirApp(u){
 function salir(){
   cerrarSesion();
   ui.usuario = null;
-  ui.ticket = [];
+  ui.carrito = [];
   $('#app').hidden = true;
   $('#ingreso').hidden = false;
   $('#ing-clave').value = '';

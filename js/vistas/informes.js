@@ -1,20 +1,23 @@
 import { $, esc, plata, plataCorta, fechaLarga, hora, dia, bajar, aCSV, avisar }
   from '../utilidades.js';
-import { rango, resumen, ranking } from '../negocio.js';
+import { rango, resumen, ranking, diasDe, porMedioPago, porUsuario } from '../negocio.js';
 import { cifra, selectorRango, grafico, vacio } from '../componentes.js';
+import { nombreMedio } from '../config.js';
 import { ui } from '../estado.js';
-
-const DIAS_GRAFICO = { hoy: 7, '7': 7, mes: 30, '30': 30, todo: 30 };
 
 export function vistaInformes(){
   const r = rango(ui.rangoInforme);
   const s = resumen(r);
   const { productos, talles } = ranking(s.ventas);
   const topTalle = talles.length ? talles[0][1] : 1;
+  const medios = porMedioPago(s.ventas);
+  const usuarios = porUsuario(s.ventas);
+  const topMedio = medios.length ? medios[0].totalC : 1;
 
-  $('#subtitulo').textContent = ui.rangoInforme === 'todo'
+  $('#subtitulo').textContent = ui.rangoInforme.clave === 'todo'
     ? 'Todo el historial'
-    : `Del ${fechaLarga.format(r.ini)} al ${fechaLarga.format(r.fin)}`;
+    : `Del ${fechaLarga.format(r.ini)} al ${fechaLarga.format(r.fin)}` +
+      (r.dadoVuelta ? ' (fechas invertidas, las di vuelta)' : '');
 
   $('#acciones').innerHTML = `
     ${selectorRango(ui.rangoInforme, 'data-rango-informe')}
@@ -28,12 +31,12 @@ export function vistaInformes(){
                 pie:`${s.vendido ? Math.round(s.ganancia / s.vendido * 100) : 0}% de margen real` })}
       ${cifra({ titulo:'Prendas vendidas', valor: s.unidades,
                 pie:`${s.ventas.length ? (s.unidades / s.ventas.length).toFixed(1) : 0} por venta` })}
-      ${cifra({ titulo:'Ticket promedio', valor: plataCorta(s.ticket), pie:'por operación' })}
+      ${cifra({ titulo:'Venta promedio', valor: plataCorta(s.ticket), pie:'por operación' })}
     </dl>
 
     <section class="tarjeta" style="margin-bottom:16px">
       <div class="tarjeta-tope"><h3>Ventas por día</h3></div>
-      <div class="tarjeta-cuerpo">${grafico(DIAS_GRAFICO[ui.rangoInforme] || 30)}</div>
+      <div class="tarjeta-cuerpo">${grafico(diasDe(r), r)}</div>
     </section>
 
     <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
@@ -52,35 +55,72 @@ export function vistaInformes(){
       </section>
 
       <section class="tarjeta">
+        <div class="tarjeta-tope"><h3>Cómo te pagaron</h3></div>
+        <div class="tarjeta-cuerpo">
+          ${medios.length ? medios.map(m => `
+            <div class="barra-fila">
+              <span class="barra-nombre">${esc(nombreMedio(m.medio))}</span>
+              <div class="barra-riel">
+                <div class="barra-relleno" style="width:${Math.round(m.totalC / topMedio * 100)}%"></div>
+              </div>
+              <span class="barra-valor num">${plataCorta(m.totalC)}</span>
+            </div>
+            <div class="barra-pie">${m.ventas} ${m.ventas === 1 ? 'venta' : 'ventas'} ·
+              ${s.vendido ? Math.round(m.totalC / s.vendido * 100) : 0}% del total</div>`).join('')
+            : '<p style="color:var(--tinta-3);margin:0">Sin ventas en el período.</p>'}
+        </div>
+      </section>
+
+      <section class="tarjeta">
         <div class="tarjeta-tope"><h3>Talles que más salen</h3></div>
         <div class="tarjeta-cuerpo">
           ${talles.length ? talles.map(([t, c]) => `
-            <div style="display:flex;align-items:center;gap:11px;margin-bottom:9px">
-              <span style="width:44px;font-weight:600;font-size:14px">${esc(t)}</span>
-              <div style="flex:1;height:22px;background:var(--superficie-2);border-radius:5px;overflow:hidden">
-                <div style="width:${Math.round(c / topTalle * 100)}%;height:100%;
-                            background:var(--marca);border-radius:5px"></div>
+            <div class="barra-fila">
+              <span class="barra-nombre">${esc(t)}</span>
+              <div class="barra-riel">
+                <div class="barra-relleno" style="width:${Math.round(c / topTalle * 100)}%"></div>
               </div>
-              <span class="num" style="width:34px;text-align:right;font-size:13.5px">${c}</span>
+              <span class="barra-valor num">${c}</span>
             </div>`).join('')
             : '<p style="color:var(--tinta-3);margin:0">Sin datos todavía.</p>'}
         </div>
       </section>
+
+      ${usuarios.length > 1 ? `
+      <section class="tarjeta">
+        <div class="tarjeta-tope"><h3>Quién vendió</h3></div>
+        <div class="tabla-env"><table>
+          <thead><tr><th>Persona</th><th class="der">Ventas</th><th class="der">Vendido</th></tr></thead>
+          <tbody>${usuarios.map(u => `
+            <tr><td class="prod-nombre">${esc(u.usuario)}</td>
+              <td class="der num">${u.ventas}</td>
+              <td class="der num">${plata(u.totalC)}</td></tr>`).join('')}</tbody>
+        </table></div>
+      </section>` : ''}
     </div>`;
 
-  $('#bajar-csv').onclick = () => {
-    const filas = [['Fecha', 'Hora', 'Producto', 'Talle', 'Cantidad',
-                    'Precio unitario', 'Total', 'Ganancia']];
-    s.ventas
-      .slice()
-      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
-      .forEach(v => v.items.forEach(i => filas.push([
-        dia(v.fecha), hora.format(new Date(v.fecha)), i.nombre, i.talle, i.cant,
-        (i.precioC / 100).toFixed(2),
-        (i.precioC * i.cant / 100).toFixed(2),
-        ((i.precioC - i.costoC) * i.cant / 100).toFixed(2)
-      ])));
-    bajar(`ventas-${ui.rangoInforme}.csv`, aCSV(filas), 'text/csv;charset=utf-8');
-    avisar('CSV descargado');
-  };
+  $('#bajar-csv').onclick = () => descargarCSV(s, r);
+}
+
+function descargarCSV(s, r){
+  const filas = [['Fecha', 'Hora', 'Vendedor', 'Forma de cobro', 'Producto', 'Talle',
+                  'Cantidad', 'Precio unitario', 'Total', 'Ganancia']];
+  s.ventas
+    .slice()
+    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+    .forEach(v => v.items.forEach(i => filas.push([
+      dia(v.fecha), hora.format(new Date(v.fecha)),
+      v.usuario || '', nombreMedio(v.medioPago),
+      i.nombre, i.talle, i.cant,
+      (i.precioC / 100).toFixed(2),
+      (i.precioC * i.cant / 100).toFixed(2),
+      ((i.precioC - i.costoC) * i.cant / 100).toFixed(2)
+    ])));
+
+  const nombre = ui.rangoInforme.clave === 'personalizado'
+    ? `ventas-${dia(r.ini.toISOString())}-a-${dia(r.fin.toISOString())}.csv`
+    : `ventas-${ui.rangoInforme.clave}.csv`;
+
+  bajar(nombre, aCSV(filas), 'text/csv;charset=utf-8');
+  avisar('CSV descargado');
 }

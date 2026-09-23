@@ -53,17 +53,21 @@ h1,h2,h3{ margin:0; font-weight:600; letter-spacing:-.015em }
 @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important } }
 
 /* ==========================================================================
-   INGRESO
+   PANTALLA DE ACCESO
+   Se llama .acceso y no .ingreso: "ingreso" también es un tipo de movimiento
+   de caja, y una etiqueta <span class="pastilla ingreso"> enganchaba esta
+   misma regla. El span quedaba fijo cubriendo la pantalla, con el
+   border-radius de la pastilla: un círculo verde gigante encima de todo.
    ========================================================================== */
-.ingreso{
+.acceso{
   position:fixed; inset:0; z-index:90;
   display:grid; place-items:center; padding:24px;
   background:
     radial-gradient(120% 80% at 50% 0%, var(--marca-suave) 0%, transparent 60%),
     var(--papel);
 }
-.ingreso[hidden]{ display:none }
-.ingreso-caja{
+.acceso[hidden]{ display:none }
+.acceso-caja{
   width:100%; max-width:380px;
   background:var(--superficie);
   border:1px solid var(--linea);
@@ -71,9 +75,9 @@ h1,h2,h3{ margin:0; font-weight:600; letter-spacing:-.015em }
   box-shadow:var(--sombra);
   padding:30px 28px 26px;
 }
-.ingreso-caja h1{ font-size:21px; margin-bottom:4px }
-.ingreso-caja p{ margin:0 0 22px; color:var(--tinta-2); font-size:14px }
-.ingreso-nota{
+.acceso-caja h1{ font-size:21px; margin-bottom:4px }
+.acceso-caja p{ margin:0 0 22px; color:var(--tinta-2); font-size:14px }
+.acceso-nota{
   margin-top:18px; padding:11px 13px;
   background:var(--superficie-2); border:1px solid var(--linea);
   border-radius:var(--r-ch);
@@ -238,9 +242,9 @@ tbody tr:hover{ background:var(--superficie-2) }
   font-size:12.5px; font-weight:500;
   background:var(--superficie-2); border:1px solid var(--linea); color:var(--tinta-2);
 }
-.pastilla.venta{ background:var(--marca-suave); border-color:#BEDCD9; color:var(--marca-oscuro) }
-.pastilla.ingreso{ background:var(--marca-suave); border-color:#BEDCD9; color:var(--marca-oscuro) }
-.pastilla.egreso{ background:var(--egreso-suave); border-color:#E4C3D1; color:var(--egreso) }
+.pastilla.es-venta{ background:var(--marca-suave); border-color:#BEDCD9; color:var(--marca-oscuro) }
+.pastilla.es-ingreso{ background:var(--marca-suave); border-color:#BEDCD9; color:var(--marca-oscuro) }
+.pastilla.es-egreso{ background:var(--egreso-suave); border-color:#E4C3D1; color:var(--egreso) }
 
 .vacio{ padding:44px 24px; text-align:center; color:var(--tinta-2) }
 .vacio h3{ font-size:16px; margin-bottom:5px; color:var(--tinta) }
@@ -266,8 +270,8 @@ tbody tr:hover{ background:var(--superficie-2) }
 .item .talle:hover{ border-color:var(--marca); color:var(--marca) }
 .item .talle.cero{ cursor:not-allowed; opacity:.55 }
 
-.ticket{ position:sticky; top:88px }
-.ticket-lineas{ max-height:min(46vh,420px); overflow-y:auto }
+.carrito{ position:sticky; top:88px }
+.carrito-lineas{ max-height:min(46vh,420px); overflow-y:auto }
 .linea{
   display:grid; grid-template-columns:1fr auto; gap:4px 10px;
   padding:11px 16px; border-bottom:1px solid var(--linea);
@@ -278,7 +282,7 @@ tbody tr:hover{ background:var(--superficie-2) }
 .linea .m{ font-weight:600; align-self:center }
 .linea .quitar{ grid-column:2; font-size:12.5px; color:var(--tinta-3); justify-self:end }
 .linea .quitar:hover{ color:var(--egreso) }
-.ticket-pie{ padding:14px 16px; border-top:1px solid var(--linea); background:var(--superficie-2); border-radius:0 0 var(--r) var(--r) }
+.carrito-pie{ padding:14px 16px; border-top:1px solid var(--linea); background:var(--superficie-2); border-radius:0 0 var(--r) var(--r) }
 .total-fila{ display:flex; justify-content:space-between; align-items:baseline; font-size:13.5px; color:var(--tinta-2); margin-bottom:6px }
 .total-fila.grande{ font-size:15px; color:var(--tinta); font-weight:600; margin:10px 0 14px }
 .total-fila.grande b{ font-size:25px; letter-spacing:-.03em }
@@ -345,8 +349,8 @@ tbody tr:hover{ background:var(--superficie-2) }
    ========================================================================== */
 @media (max-width:1040px){
   .venta{ grid-template-columns:1fr }
-  .ticket{ position:static }
-  .ticket-lineas{ max-height:none }
+  .carrito{ position:static }
+  .carrito-lineas{ max-height:none }
 }
 @media (max-width:860px){
   :root{ --rail:0px }
@@ -413,7 +417,7 @@ tbody tr:hover{ background:var(--superficie-2) }
   background:var(--marca-suave); color:var(--marca);
 }
 .mov-icono svg{ width:19px; height:19px; stroke-width:1.9; fill:none; stroke:currentColor }
-.mov-icono.egreso{ background:var(--egreso-suave); color:var(--egreso) }
+.mov-icono.es-egreso{ background:var(--egreso-suave); color:var(--egreso) }
 
 .mov-txt{
   min-width:0;
@@ -458,4 +462,49 @@ tbody tr:hover{ background:var(--superficie-2) }
   .mov-monto{ grid-row:auto; grid-column:2; align-items:flex-start; text-align:left;
               flex-direction:row; align-items:baseline; gap:12px; margin-top:3px }
   .mov-dia{ padding:10px 14px 8px }
+}
+
+/* ==========================================================================
+   RANGO DE FECHAS (caja e informes)
+   ========================================================================== */
+.rango{ display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+.rango-botones{
+  display:flex; gap:5px; flex-wrap:wrap;
+  background:var(--superficie); border:1px solid var(--linea-2);
+  border-radius:var(--r-ch); padding:3px;
+}
+.rango-fechas{ display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap }
+.rango-fechas label{ display:flex; flex-direction:column; gap:3px }
+.rango-fechas span{ font-size:11.5px; color:var(--tinta-2); font-weight:500; padding-left:2px }
+.rango-fechas input{ min-height:36px; padding:6px 10px; font-size:13.5px; width:auto; min-width:140px }
+
+/* ==========================================================================
+   BARRAS HORIZONTALES (formas de cobro, talles)
+   ========================================================================== */
+.barra-fila{ display:flex; align-items:center; gap:11px; margin-bottom:6px }
+.barra-nombre{
+  width:104px; flex:none; font-size:13.5px; font-weight:500;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.barra-riel{ flex:1; height:22px; background:var(--superficie-2); border-radius:5px; overflow:hidden }
+.barra-relleno{ height:100%; background:var(--marca); border-radius:5px; min-width:2px }
+.barra-valor{ width:78px; flex:none; text-align:right; font-size:13.5px; font-weight:600 }
+.barra-pie{ font-size:12px; color:var(--tinta-3); margin:-2px 0 11px 115px }
+
+/* ==========================================================================
+   FIRMA (quién registra una operación)
+   ========================================================================== */
+.firma{
+  margin:11px 0 0; font-size:12.5px; color:var(--tinta-3);
+  text-align:center; line-height:1.45;
+}
+.carrito-pie .firma{ margin-top:9px }
+
+@media (max-width:560px){
+  .barra-nombre{ width:80px; font-size:13px }
+  .barra-valor{ width:66px; font-size:13px }
+  .barra-pie{ margin-left:91px }
+  .rango-fechas{ width:100% }
+  .rango-fechas label{ flex:1 }
+  .rango-fechas input{ min-width:0; width:100% }
 }

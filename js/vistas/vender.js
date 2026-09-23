@@ -2,15 +2,16 @@ import { $, esc, plata, nid, avisar, hoyISO } from '../utilidades.js';
 import { datos, guardar } from '../almacen.js';
 import { buscar } from '../negocio.js';
 import { claseTalle, vacio, buscador } from '../componentes.js';
-import { ui, bus } from '../estado.js';
+import { MEDIOS_PAGO, nombreMedio } from '../config.js';
+import { ui, bus, quienOpera } from '../estado.js';
 
 export function vistaVender(){
   $('#acciones').innerHTML = buscador(ui.busqueda);
 
   const lista = buscar(ui.busqueda);
-  const total = ui.ticket.reduce((a, i) => a + i.precioC * i.cant, 0);
-  const costo = ui.ticket.reduce((a, i) => a + i.costoC * i.cant, 0);
-  const prendas = ui.ticket.reduce((a, i) => a + i.cant, 0);
+  const total   = ui.carrito.reduce((a, i) => a + i.precioC * i.cant, 0);
+  const costo   = ui.carrito.reduce((a, i) => a + i.costoC * i.cant, 0);
+  const prendas = ui.carrito.reduce((a, i) => a + i.cant, 0);
 
   $('#hoja').innerHTML = `<div class="venta">
     <div>${lista.length ? `<div class="catalogo">${lista.map(p => `
@@ -28,30 +29,44 @@ export function vistaVender(){
           texto:'Cargá productos o revisá la búsqueda.' })}</section>`}
     </div>
 
-    <aside class="tarjeta ticket">
-      <div class="tarjeta-tope"><h3>Ticket</h3>
-        ${ui.ticket.length
-          ? '<button class="btn chico plano" id="vaciar-ticket" style="margin-left:auto">Vaciar</button>'
+    <aside class="tarjeta carrito">
+      <div class="tarjeta-tope"><h3>Carrito</h3>
+        ${ui.carrito.length
+          ? '<button class="btn chico plano" id="vaciar-carrito" style="margin-left:auto">Vaciar</button>'
           : ''}
       </div>
-      ${ui.ticket.length ? `
-        <div class="ticket-lineas">${ui.ticket.map((i, ix) => `
+      ${ui.carrito.length ? `
+        <div class="carrito-lineas">${ui.carrito.map((i, ix) => `
           <div class="linea">
             <div class="n">${esc(i.nombre)}</div>
             <div class="m num">${plata(i.precioC * i.cant)}</div>
             <div class="d">Talle ${esc(i.talle)} · ${i.cant} × ${plata(i.precioC)}</div>
             <button class="quitar" data-quitar="${ix}">Quitar</button>
           </div>`).join('')}</div>
-        <div class="ticket-pie">
+
+        <div class="carrito-pie">
+          <label class="campo" style="margin-bottom:12px">
+            <span>Cómo paga</span>
+            <select id="medio-pago">
+              ${MEDIOS_PAGO.map(m => `<option value="${m.id}"
+                ${ui.medioPago === m.id ? 'selected' : ''}>${esc(m.nombre)}</option>`).join('')}
+            </select>
+          </label>
+
           <div class="total-fila"><span>Prendas</span><span class="num">${prendas}</span></div>
           <div class="total-fila"><span>Ganancia de esta venta</span>
             <span class="num pos">${plata(total - costo)}</span></div>
           <div class="total-fila grande"><span>Total</span><b class="num">${plata(total)}</b></div>
+
           <button class="btn primario" id="cobrar" style="width:100%">Confirmar venta</button>
+          <p class="carrito-firma">Queda registrada a nombre de ${esc(quienOpera())}</p>
         </div>`
-      : vacio({ titulo:'Ticket vacío', texto:'Tocá el talle de una prenda para sumarla.' })}
+      : vacio({ titulo:'Carrito vacío', texto:'Tocá el talle de una prenda para sumarla.' })}
     </aside>
   </div>`;
+
+  const sel = $('#medio-pago');
+  if (sel) sel.onchange = e => { ui.medioPago = e.target.value; };
 
   const q = $('#q');
   if (q) q.oninput = e => {
@@ -63,11 +78,11 @@ export function vistaVender(){
   };
 }
 
-export function sumarAlTicket(productoId, talle){
+export function sumarAlCarrito(productoId, talle){
   const p = datos.productos.find(x => x.id === productoId);
   if (!p) return;
 
-  const yaPuesto = ui.ticket
+  const yaPuesto = ui.carrito
     .filter(i => i.productoId === productoId && i.talle === talle)
     .reduce((a, i) => a + i.cant, 0);
 
@@ -76,36 +91,41 @@ export function sumarAlTicket(productoId, talle){
     return;
   }
 
-  const linea = ui.ticket.find(i => i.productoId === productoId && i.talle === talle);
+  const linea = ui.carrito.find(i => i.productoId === productoId && i.talle === talle);
   if (linea) linea.cant++;
-  else ui.ticket.push({ productoId, nombre: p.nombre, talle, cant: 1,
-                        precioC: p.precioC, costoC: p.costoC });
+  else ui.carrito.push({ productoId, nombre: p.nombre, talle, cant: 1,
+                         precioC: p.precioC, costoC: p.costoC });
   vistaVender();
 }
 
 export function confirmarVenta(){
-  if (!ui.ticket.length) return;
+  if (!ui.carrito.length) return;
 
-  const totalC = ui.ticket.reduce((a, i) => a + i.precioC * i.cant, 0);
-  const costoC = ui.ticket.reduce((a, i) => a + i.costoC * i.cant, 0);
+  const totalC = ui.carrito.reduce((a, i) => a + i.precioC * i.cant, 0);
+  const costoC = ui.carrito.reduce((a, i) => a + i.costoC * i.cant, 0);
 
-  ui.ticket.forEach(i => {
+  ui.carrito.forEach(i => {
     const p = datos.productos.find(x => x.id === i.productoId);
     if (p && p.talles[i.talle] !== undefined)
       p.talles[i.talle] = Math.max(0, p.talles[i.talle] - i.cant);
   });
 
-  /* El precio y el costo quedan congelados dentro de la venta. Si mañana
-     cambia el margen del producto, la ganancia de hoy no se reescribe. */
+  /* El precio, el costo y quién la hizo quedan congelados dentro de la venta.
+     Si mañana cambia el margen del producto, la ganancia de hoy no se reescribe. */
   datos.ventas.push({
-    id: nid(), fecha: hoyISO(),
-    items: ui.ticket.map(i => ({ ...i })),
-    totalC, gananciaC: totalC - costoC
+    id: nid(),
+    fecha: hoyISO(),
+    usuario: quienOpera(),
+    medioPago: ui.medioPago,
+    items: ui.carrito.map(i => ({ ...i })),
+    totalC,
+    gananciaC: totalC - costoC
   });
 
   guardar();
-  const n = ui.ticket.reduce((a, i) => a + i.cant, 0);
-  ui.ticket = [];
+  const n = ui.carrito.reduce((a, i) => a + i.cant, 0);
+  const medio = nombreMedio(ui.medioPago);
+  ui.carrito = [];
   bus.pintar();
-  avisar(`Venta registrada: ${plata(totalC)} · ${n} ${n === 1 ? 'prenda' : 'prendas'}`);
+  avisar(`Venta registrada: ${plata(totalC)} · ${n} ${n === 1 ? 'prenda' : 'prendas'} · ${medio}`);
 }

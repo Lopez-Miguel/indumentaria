@@ -1,8 +1,8 @@
 # Control de stock y caja — indumentaria
 
 Sistema de control interno para un local de ropa: stock por talle, registro de
-ventas, ingresos, egresos y balance. Vanilla JavaScript, sin dependencias, sin
-compilación.
+ventas con forma de cobro, ingresos, egresos y balance. Vanilla JavaScript, sin
+dependencias, sin compilación.
 
 No es un sistema de venta online ni de facturación. No emite comprobantes
 fiscales.
@@ -134,6 +134,34 @@ remesa la acumula, no la pisa. Lo que sí se reemplaza es el costo y el margen.
 oyente en `app.js`, delegado por atributos `data-`: enganchar oyentes a cada
 botón se perdería en el siguiente repintado.
 
+**Cada venta guarda quién la hizo y cómo se cobró.** Igual que el precio, son
+copias congeladas: quedan en la venta aunque después cambie el usuario o se
+agregue una forma de cobro nueva. Los productos guardan `creadoPor` (nunca se
+pisa) y `modificadoPor` (el último que lo tocó).
+
+**Las formas de cobro se configuran en `js/config.js`.** Agregar una línea a
+`MEDIOS_PAGO` la hace aparecer sola en el carrito, en la caja y en los informes.
+El `id` es lo que queda guardado en cada venta, así que no conviene cambiarlo
+una vez que hay ventas cargadas.
+
+**Las clases modificadoras llevan prefijo `es-`** (`.pastilla.es-ingreso`,
+`.mov-icono.es-egreso`). Sin el prefijo, la etiqueta de un movimiento de tipo
+ingreso quedaba como `class="pastilla ingreso"` y enganchaba `.ingreso`, que era
+la pantalla de acceso: `position:fixed; inset:0`. El span se volvía una capa
+sobre toda la pantalla y, con el `border-radius:999px` de la pastilla, aparecía
+un círculo verde gigante tapando la caja. La pantalla de acceso ahora se llama
+`.acceso`, y `herramientas/` incluye una prueba que detecta esta familia de
+choques.
+
+**Los `<svg>` llevan `width`, `height`, `fill` y `stroke` como atributos**, no
+solo en el CSS. Un SVG sin medidas se dibuja a su tamaño por defecto, que son
+300×150: si la hoja de estilos no llega a aplicarse —caché vieja, un motor que
+no soporta la regla— aparece un dibujo gigante y relleno de negro en cada fila.
+
+**Las fechas del rango desde-hasta se arman a mano.** `new Date('2026-09-22')`
+las interpreta como UTC y en Argentina se corren un día para atrás; por eso
+`desdeTexto()` en `negocio.js` parte el texto y usa hora local.
+
 ---
 
 ## Formato de importación
@@ -169,3 +197,7 @@ Tener presente que en un repositorio público queda expuesto todo, incluido
 2. Firestore en lugar de `almacen.js`, con Security Rules que exijan `auth != null`.
 3. Cierre de caja diario.
 4. Definir si hace falta código de barras.
+
+Con Firestore, los campos `usuario` de cada venta se pueden reemplazar por el
+`uid` de Firebase Authentication, y las Security Rules pueden exigir que
+coincida con quien escribe.

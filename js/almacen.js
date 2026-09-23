@@ -69,7 +69,7 @@ let reloj = null;
 let enVuelo = false;
 
 /* Se llama muchas veces seguidas (cada tecla del editor, cada línea del
-   ticket). Se agrupan en una sola escritura para no castigar al disco. */
+   carrito). Se agrupan en una sola escritura para no castigar al disco. */
 export function guardar(){
   clearTimeout(reloj);
   reloj = setTimeout(guardarYa, 350);

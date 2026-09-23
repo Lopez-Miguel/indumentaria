@@ -16,7 +16,7 @@ export function vistaAjustes(){
         <div class="tarjeta-tope"><h3>Dónde se están guardando los datos</h3></div>
         <div class="tarjeta-cuerpo">
           <p style="margin:0 0 11px;font-size:14px">
-            <span class="pastilla ${enServidor ? 'ingreso' : 'egreso'}">
+            <span class="pastilla ${enServidor ? 'es-ingreso' : 'es-egreso'}">
               ${enServidor ? 'En el archivo JSON' : 'En este navegador'}</span>
           </p>
           <p style="font-size:13.5px;color:var(--tinta-2);margin:0;line-height:1.6">
@@ -101,7 +101,7 @@ export function vistaAjustes(){
           const d = JSON.parse(lector.result);
           if (!Array.isArray(d.productos)) throw new Error('formato');
           await reemplazar(d);
-          ui.ticket = [];
+          ui.carrito = [];
           bus.pintar();
           avisar('Respaldo restaurado');
         }catch(e){
@@ -121,7 +121,7 @@ export function vistaAjustes(){
     async alConfirmar(){
       try{
         await volverAlInicial();
-        ui.ticket = [];
+        ui.carrito = [];
         bus.pintar();
         avisar('Demostración recargada');
       }catch(e){
@@ -137,7 +137,7 @@ export function vistaAjustes(){
     riesgo: true,
     async alConfirmar(){
       await vaciar();
-      ui.ticket = [];
+      ui.carrito = [];
       bus.ir('productos');
       avisar('Todo vacío');
     }

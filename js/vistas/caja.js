@@ -9,24 +9,36 @@
    siempre a la vista, el detalle de la venta se despliega solo si se pide.
    -------------------------------------------------------------------------- */
 
-import { $, esc, plata, plataCorta, hora, nombreDia, dia, nid, aCentavos,
+import { $, esc, plata, plataCorta, hora, nombreDia, dia, nid, aCentavos, fechaLarga,
          avisar, dialogo, cerrarDialogo } from '../utilidades.js';
 import { datos, guardar } from '../almacen.js';
 import { rango, resumen } from '../negocio.js';
 import { cifra, selectorRango, vacio } from '../componentes.js';
-import { ui, bus } from '../estado.js';
+import { nombreMedio } from '../config.js';
+import { ui, bus, quienOpera } from '../estado.js';
 
-const ICONO_VENTA = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+/* Los atributos width, height, fill y stroke van en el propio SVG, no solo en
+   el CSS. Si la hoja de estilos no llega a aplicarse —caché vieja, un motor
+   que no soporta la regla— un SVG sin medidas se dibuja a su tamaño por
+   defecto, que son 300x150, y aparece un dibujo gigante y relleno de negro
+   en cada fila. Con los atributos puestos eso no puede pasar. */
+const SVG = 'width="19" height="19" viewBox="0 0 24 24" fill="none" ' +
+            'stroke="currentColor" stroke-width="1.9" ' +
+            'stroke-linecap="round" stroke-linejoin="round"';
+
+const ICONO_VENTA = `<svg ${SVG}>
   <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 8H6"/>
   <circle cx="10" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg>`;
-const ICONO_INGRESO = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>`;
-const ICONO_EGRESO = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 5v14m0 0 6-6m-6 6-6-6"/></svg>`;
+const ICONO_INGRESO = `<svg ${SVG}><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>`;
+const ICONO_EGRESO  = `<svg ${SVG}><path d="M12 5v14m0 0 6-6m-6 6-6-6"/></svg>`;
 
 export function vistaCaja(){
   const r = rango(ui.rangoCaja);
   const s = resumen(r);
+
+  $('#subtitulo').textContent = ui.rangoCaja.clave === 'todo'
+    ? 'Todo el historial'
+    : `Del ${fechaLarga.format(r.ini)} al ${fechaLarga.format(r.fin)}`;
 
   $('#acciones').innerHTML = `
     ${selectorRango(ui.rangoCaja, 'data-rango-caja')}
@@ -37,11 +49,13 @@ export function vistaCaja(){
   const filas = [
     ...s.ventas.map(v => ({
       id: v.id, fecha: v.fecha, clase: 'venta', signo: 1, montoC: v.totalC,
-      titulo: tituloVenta(v), ganancia: v.gananciaC, items: v.items
+      titulo: tituloVenta(v), ganancia: v.gananciaC, items: v.items,
+      usuario: v.usuario, medio: v.medioPago
     })),
     ...s.movs.map(m => ({
       id: m.id, fecha: m.fecha, clase: m.tipo, signo: m.tipo === 'egreso' ? -1 : 1,
-      montoC: m.montoC, titulo: m.concepto, ganancia: null, items: null
+      montoC: m.montoC, titulo: m.concepto, ganancia: null, items: null,
+      usuario: m.usuario, medio: null
     }))
   ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
@@ -104,7 +118,7 @@ function filaMov(f){
                  : f.clase === 'ingreso' ? 'Ingreso' : 'Egreso';
 
   return `<div class="mov">
-    <div class="mov-icono ${f.clase === 'egreso' ? 'egreso' : ''}">${icono}</div>
+    <div class="mov-icono ${f.clase === 'egreso' ? 'es-egreso' : ''}">${icono}</div>
     <div class="mov-txt" title="${esc(f.titulo)}">${esc(f.titulo)}</div>
     <div class="mov-monto">
       <span class="num" style="color:${f.signo < 0 ? 'var(--egreso)' : 'var(--marca)'}">
@@ -114,7 +128,11 @@ function filaMov(f){
     <div class="mov-sub">
       <span class="num">${hora.format(new Date(f.fecha))}</span>
       <span class="sep">·</span>
-      <span class="pastilla ${f.clase}">${etiqueta}</span>
+      <span class="pastilla es-${f.clase}">${etiqueta}</span>
+      ${f.medio ? `<span class="sep">·</span>
+        <span class="pastilla">${esc(nombreMedio(f.medio))}</span>` : ''}
+      ${f.usuario ? `<span class="sep">·</span>
+        <span>${esc(f.usuario)}</span>` : ''}
       ${f.ganancia !== null ? `<span class="sep">·</span>
         <span>ganancia ${plata(f.ganancia)}</span>` : ''}
       ${f.items && f.items.length > 1
@@ -151,6 +169,7 @@ export function editorMovimiento(tipo){
         <input type="text" id="m-monto" inputmode="decimal" placeholder="45000"></label>
       <label class="campo"><span>Fecha</span>
         <input type="date" id="m-fecha" value="${new Date().toISOString().slice(0, 10)}"></label>
+      <p class="firma" style="margin:0">Queda registrado a nombre de ${esc(quienOpera())}</p>
     </div>`,
     pie: `<button class="btn" data-cerrar>Cancelar</button>
           <button class="btn primario" id="m-guardar">Guardar</button>`,
@@ -162,7 +181,8 @@ export function editorMovimiento(tipo){
         if (montoC <= 0){ avisar('El monto tiene que ser mayor a cero', true); return; }
 
         const f = new Date($('#m-fecha').value + 'T12:00:00');
-        datos.movimientos.push({ id: nid(), fecha: f.toISOString(), tipo, concepto, montoC });
+        datos.movimientos.push({ id: nid(), fecha: f.toISOString(), tipo, concepto, montoC,
+                                 usuario: quienOpera() });
         guardar(); cerrarDialogo(); bus.pintar();
         avisar(tipo === 'egreso' ? 'Egreso registrado' : 'Ingreso registrado');
       };
